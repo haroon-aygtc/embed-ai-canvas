@@ -1,9 +1,13 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { WidgetCustomizer } from './WidgetCustomizer';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Palette, Code2, Eye } from 'lucide-react';
 import { WidgetPreview } from './WidgetPreview';
-import { WidgetSettings } from './WidgetSettings';
+import { WidgetTemplates } from './WidgetTemplates';
+import { ConfigurationTabs } from './ConfigurationTabs';
+import { EmbedCodeGenerator } from '../embed/EmbedCodeGenerator';
 
 export interface WidgetConfig {
   theme: 'light' | 'dark' | 'auto';
@@ -33,9 +37,15 @@ const defaultConfig: WidgetConfig = {
 
 export const WidgetConfiguration = () => {
   const [config, setConfig] = useState<WidgetConfig>(defaultConfig);
+  const [activeTab, setActiveTab] = useState('design');
 
   const updateConfig = (updates: Partial<WidgetConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
+  };
+
+  const handleTemplateSelect = (templateConfig: WidgetConfig) => {
+    setConfig(templateConfig);
+    setActiveTab('design'); // Switch to design tab after selecting template
   };
 
   return (
@@ -43,20 +53,71 @@ export const WidgetConfiguration = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Widget Configuration</h1>
-          <p className="text-muted-foreground">Customize your AI chat widget appearance and behavior</p>
+          <p className="text-muted-foreground mt-1">
+            Customize your AI chat widget with professional templates or create your own design
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            Save Draft
+          </Button>
+          <Button>
+            Publish Changes
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <WidgetCustomizer config={config} onConfigChange={updateConfig} />
-          <WidgetSettings config={config} onConfigChange={updateConfig} />
-        </div>
-        
-        <div className="lg:sticky lg:top-6">
-          <WidgetPreview config={config} />
-        </div>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="templates" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Templates
+          </TabsTrigger>
+          <TabsTrigger value="design" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Design & Configure
+          </TabsTrigger>
+          <TabsTrigger value="embed" className="flex items-center gap-2">
+            <Code2 className="h-4 w-4" />
+            Embed Code
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="templates" className="mt-6">
+          <Card>
+            <CardContent className="p-6">
+              <WidgetTemplates 
+                onSelectTemplate={handleTemplateSelect}
+                currentConfig={config}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="design" className="mt-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <ConfigurationTabs config={config} onConfigChange={updateConfig} />
+            </div>
+            
+            <div className="xl:sticky xl:top-6">
+              <WidgetPreview config={config} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="embed" className="mt-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <EmbedCodeGenerator config={config} />
+            </div>
+            
+            <div className="xl:sticky xl:top-6">
+              <WidgetPreview config={config} />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
