@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import Index from "./pages/Index";
 import WidgetPage from "./pages/dashboard/WidgetPage";
 import ProvidersPage from "./pages/dashboard/ProvidersPage";
@@ -16,21 +17,23 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard/widget" element={<WidgetPage />} />
-          <Route path="/dashboard/providers" element={<ProvidersPage />} />
-          <Route path="/dashboard/models" element={<ModelsPage />} />
-          <Route path="/dashboard/embed" element={<EmbedPage />} />
-          <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider defaultTheme="system" storageKey="chatwidget-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard/widget" element={<WidgetPage />} />
+            <Route path="/dashboard/providers" element={<ProvidersPage />} />
+            <Route path="/dashboard/models" element={<ModelsPage />} />
+            <Route path="/dashboard/embed" element={<EmbedPage />} />
+            <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
