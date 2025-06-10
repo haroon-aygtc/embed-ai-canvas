@@ -3,46 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Widget;
+use App\Models\WidgetConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use App\Http\Requests\Widget\StoreWidgetRequest;
-use App\Http\Requests\Widget\UpdateWidgetRequest;
-use App\Http\Requests\Widget\DuplicateWidgetRequest;
-use App\Services\WidgetService;
+use App\Http\Requests\WidgetConfiguration\StoreConfigurationRequest;
+use App\Http\Requests\WidgetConfiguration\UpdateConfigurationRequest;
+use App\Http\Requests\WidgetConfiguration\RollbackConfigurationRequest;
+use App\Services\WidgetConfigurationService;
 
-class WidgetController extends Controller
+class WidgetConfigurationController extends Controller
 {
     public function __construct(
-        private WidgetService $widgetService
+        private WidgetConfigurationService $configurationService
     ) {}
 
     /**
-     * Get all widgets for the authenticated user.
+     * Get all configurations for a widget.
      */
-    public function index(Request $request): JsonResponse
-    {
-        $result = $this->widgetService->getAllWidgets($request->user());
-
-        if ($result['success']) {
-            return response()->json([
-                'success' => true,
-                'data' => $result['data']
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => $result['message'],
-            'error' => $result['error'] ?? null
-        ], 500);
-    }
-
-    /**
-     * Get a specific widget for the authenticated user.
-     */
-    public function show(Request $request, Widget $widget): JsonResponse
+    public function index(Request $request, Widget $widget): JsonResponse
     {
         // Ensure the widget belongs to the authenticated user
         if ($widget->user_id !== $request->user()->id) {
@@ -52,7 +30,7 @@ class WidgetController extends Controller
             ], 404);
         }
 
-        $result = $this->widgetService->getWidget($widget);
+        $result = $this->configurationService->getConfigurations($widget);
 
         if ($result['success']) {
             return response()->json([
@@ -69,11 +47,48 @@ class WidgetController extends Controller
     }
 
     /**
-     * Create a new widget for the authenticated user.
+     * Get the active configuration for a widget.
      */
-    public function store(StoreWidgetRequest $request): JsonResponse
+    public function active(Request $request, Widget $widget): JsonResponse
     {
-        $result = $this->widgetService->createWidget($request->user(), $request->validated());
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        $result = $this->configurationService->getActiveConfiguration($widget);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+            'error' => $result['error'] ?? null
+        ], 500);
+    }
+
+    /**
+     * Create a new configuration version.
+     */
+    public function store(StoreConfigurationRequest $request, Widget $widget): JsonResponse
+    {
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        $result = $this->configurationService->createConfiguration($widget, $request->validated());
 
         if ($result['success']) {
             return response()->json([
@@ -91,9 +106,9 @@ class WidgetController extends Controller
     }
 
     /**
-     * Update a widget for the authenticated user.
+     * Update the active configuration.
      */
-    public function update(UpdateWidgetRequest $request, Widget $widget): JsonResponse
+    public function update(UpdateConfigurationRequest $request, Widget $widget): JsonResponse
     {
         // Ensure the widget belongs to the authenticated user
         if ($widget->user_id !== $request->user()->id) {
@@ -103,7 +118,7 @@ class WidgetController extends Controller
             ], 404);
         }
 
-        $result = $this->widgetService->updateWidget($widget, $request->validated());
+        $result = $this->configurationService->updateActiveConfiguration($widget, $request->validated());
 
         if ($result['success']) {
             return response()->json([
@@ -121,9 +136,9 @@ class WidgetController extends Controller
     }
 
     /**
-     * Delete a widget for the authenticated user.
+     * Activate a specific configuration version.
      */
-    public function destroy(Request $request, Widget $widget): JsonResponse
+    public function activate(Request $request, Widget $widget, WidgetConfiguration $configuration): JsonResponse
     {
         // Ensure the widget belongs to the authenticated user
         if ($widget->user_id !== $request->user()->id) {
@@ -133,7 +148,158 @@ class WidgetController extends Controller
             ], 404);
         }
 
-        $result = $this->widgetService->deleteWidget($widget);
+        // Ensure the configuration belongs to the widget
+        if ($configuration->widget_id !== $widget->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Configuration not found for this widget'
+            ], 404);
+        }
+
+        $result = $this->configurationService->activateConfiguration($configuration);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'data' => $result['data']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+            'error' => $result['error'] ?? null
+        ], 500);
+    }
+
+    /**
+     * Rollback to a previous configuration version.
+     */
+    public function rollback(RollbackConfigurationRequest $request, Widget $widget): JsonResponse
+    {
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        $result = $this->configurationService->rollbackToVersion($widget, $request->validated()['version']);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'data' => $result['data']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+            'error' => $result['error'] ?? null
+        ], 500);
+    }
+
+    /**
+     * Compare two configuration versions.
+     */
+    public function compare(Request $request, Widget $widget): JsonResponse
+    {
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        $request->validate([
+            'version1' => 'required|integer|min:1',
+            'version2' => 'required|integer|min:1|different:version1',
+        ]);
+
+        $result = $this->configurationService->compareVersions(
+            $widget,
+            $request->input('version1'),
+            $request->input('version2')
+        );
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+            'error' => $result['error'] ?? null
+        ], 500);
+    }
+
+    /**
+     * Get configuration version history.
+     */
+    public function history(Request $request, Widget $widget): JsonResponse
+    {
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        $result = $this->configurationService->getVersionHistory($widget);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+            'error' => $result['error'] ?? null
+        ], 500);
+    }
+
+    /**
+     * Delete a configuration version (except active one).
+     */
+    public function destroy(Request $request, Widget $widget, WidgetConfiguration $configuration): JsonResponse
+    {
+        // Ensure the widget belongs to the authenticated user
+        if ($widget->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Widget not found or access denied'
+            ], 404);
+        }
+
+        // Ensure the configuration belongs to the widget
+        if ($configuration->widget_id !== $widget->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Configuration not found for this widget'
+            ], 404);
+        }
+
+        // Prevent deletion of active configuration
+        if ($configuration->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete the active configuration'
+            ], 400);
+        }
+
+        $result = $this->configurationService->deleteConfiguration($configuration);
 
         if ($result['success']) {
             return response()->json([
@@ -148,145 +314,4 @@ class WidgetController extends Controller
             'error' => $result['error'] ?? null
         ], 500);
     }
-
-    /**
-     * Toggle widget status (enabled/disabled).
-     */
-    public function toggleStatus(Request $request, Widget $widget): JsonResponse
-    {
-        // Ensure the widget belongs to the authenticated user
-        if ($widget->user_id !== $request->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Widget not found or access denied'
-            ], 404);
-        }
-
-        $result = $this->widgetService->toggleStatus($widget);
-
-        if ($result['success']) {
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-                'data' => $result['data']
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => $result['message'],
-            'error' => $result['error'] ?? null
-        ], 500);
-    }
-
-    /**
-     * Duplicate a widget for the authenticated user.
-     */
-    public function duplicate(DuplicateWidgetRequest $request, Widget $widget): JsonResponse
-    {
-        // Ensure the widget belongs to the authenticated user
-        if ($widget->user_id !== $request->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Widget not found or access denied'
-            ], 404);
-        }
-
-        $result = $this->widgetService->duplicateWidget($widget, $request->validated());
-
-        if ($result['success']) {
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-                'data' => $result['data']
-            ], 201);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => $result['message'],
-            'error' => $result['error'] ?? null
-        ], 500);
-    }
-
-    /**
-     * Publish a widget.
-     */
-    public function publish(Request $request, Widget $widget): JsonResponse
-    {
-        // Ensure the widget belongs to the authenticated user
-        if ($widget->user_id !== $request->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Widget not found or access denied'
-            ], 404);
-        }
-
-        try {
-            $widget->update([
-                'status' => 'active',
-                'published_at' => now(),
-                'last_updated_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Widget published successfully',
-                'data' => [
-                    'id' => $widget->id,
-                    'status' => $widget->status,
-                    'published_at' => $widget->published_at->toISOString(),
-                    'last_updated_at' => $widget->last_updated_at->toISOString(),
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to publish widget',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get widget statistics.
-     */
-    public function statistics(Request $request, Widget $widget): JsonResponse
-    {
-        // Ensure the widget belongs to the authenticated user
-        if ($widget->user_id !== $request->user()->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Widget not found or access denied'
-            ], 404);
-        }
-
-        try {
-            // Get basic statistics
-            $stats = [
-                'total_conversations' => $widget->conversations()->count(),
-                'total_messages' => $widget->conversations()->withCount('messages')->get()->sum('messages_count'),
-                'active_conversations' => $widget->conversations()->whereNull('ended_at')->count(),
-                'average_satisfaction' => $widget->conversations()->whereNotNull('satisfaction_rating')->avg('satisfaction_rating'),
-                'response_time_avg' => $widget->analytics()->avg('response_time_avg'),
-                'last_30_days' => [
-                    'conversations' => $widget->conversations()->where('started_at', '>=', now()->subDays(30))->count(),
-                    'messages' => $widget->conversations()->where('started_at', '>=', now()->subDays(30))->withCount('messages')->get()->sum('messages_count'),
-                ],
-            ];
-
-            return response()->json([
-                'success' => true,
-                'data' => $stats
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch widget statistics',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 }
-
-

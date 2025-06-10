@@ -147,7 +147,7 @@ class AiProvidersController extends Controller
 
         try {
             $updateData = $request->only(['base_url', 'region', 'configuration']);
-            
+
             if ($request->has('api_key')) {
                 $updateData['api_key'] = encrypt($request->api_key);
                 $updateData['status'] = 'configured'; // Reset status when API key changes
@@ -220,7 +220,7 @@ class AiProvidersController extends Controller
         try {
             // Decrypt API key for testing
             $aiProvider->api_key = decrypt($aiProvider->api_key);
-            
+
             $result = $this->aiProviderService->testConnection($aiProvider);
 
             return response()->json([
@@ -251,7 +251,7 @@ class AiProvidersController extends Controller
         try {
             // Decrypt API key for fetching models
             $aiProvider->api_key = decrypt($aiProvider->api_key);
-            
+
             $models = $this->aiProviderService->fetchModels($aiProvider);
 
             return response()->json([
@@ -377,6 +377,99 @@ class AiProvidersController extends Controller
     }
 
     /**
+     * Get all models for authenticated user.
+     */
+    public function getAllModels(Request $request): JsonResponse
+    {
+        $models = AiModel::whereHas('aiProvider', function ($query) use ($request) {
+            $query->where('user_id', $request->user()->id);
+        })
+        ->with('aiProvider')
+        ->when($request->active, function ($query) {
+            return $query->where('is_active', true);
+        })
+        ->when($request->saved, function ($query) {
+            return $query->where('is_saved', true);
+        })
+        ->when($request->not_deprecated, function ($query) {
+            return $query->where('is_deprecated', false);
+        })
+        ->orderBy('name')
+        ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $models->map(function ($model) {
+                return [
+                    'id' => $model->id,
+                    'model_id' => $model->model_id,
+                    'name' => $model->name,
+                    'description' => $model->description,
+                    'family' => $model->family,
+                    'context_window' => $model->context_window,
+                    'max_tokens' => $model->max_tokens,
+                    'input_cost' => $model->input_cost,
+                    'output_cost' => $model->output_cost,
+                    'capabilities' => $model->capabilities,
+                    'is_deprecated' => $model->is_deprecated,
+                    'is_saved' => $model->is_saved,
+                    'is_active' => $model->is_active,
+                    'is_default' => $model->is_default,
+                    'release_date' => $model->release_date,
+                    'full_identifier' => $model->full_identifier,
+                    'cost_per_1k_tokens' => $model->cost_per_1k_tokens,
+                    'provider' => [
+                        'id' => $model->aiProvider->id,
+                        'name' => $model->aiProvider->provider_name,
+                        'display_name' => $model->aiProvider->display_name,
+                        'status' => $model->aiProvider->status,
+                    ],
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Get active models for authenticated user.
+     */
+    public function getActiveModels(Request $request): JsonResponse
+    {
+        $models = AiModel::whereHas('aiProvider', function ($query) use ($request) {
+            $query->where('user_id', $request->user()->id)
+                  ->where('status', 'ready');
+        })
+        ->where('is_active', true)
+        ->where('is_deprecated', false)
+        ->with('aiProvider')
+        ->orderBy('name')
+        ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $models->map(function ($model) {
+                return [
+                    'id' => $model->model_id,
+                    'name' => $model->name,
+                    'description' => $model->description,
+                    'family' => $model->family,
+                    'context_window' => $model->context_window,
+                    'max_tokens' => $model->max_tokens,
+                    'input_cost' => $model->input_cost,
+                    'output_cost' => $model->output_cost,
+                    'capabilities' => $model->capabilities,
+                    'full_identifier' => $model->full_identifier,
+                    'cost_per_1k_tokens' => $model->cost_per_1k_tokens,
+                    'provider' => [
+                        'id' => $model->aiProvider->id,
+                        'name' => $model->aiProvider->provider_name,
+                        'display_name' => $model->aiProvider->display_name,
+                    ],
+                ];
+            }),
+        ]);
+    }
+
+    /**
      * Send chat completion request.
      */
     public function chatCompletion(Request $request, AiModel $aiModel): JsonResponse
@@ -408,7 +501,7 @@ class AiProvidersController extends Controller
         try {
             // Decrypt API key for the request
             $aiModel->aiProvider->api_key = decrypt($aiModel->aiProvider->api_key);
-            
+
             $startTime = microtime(true);
             $response = $this->aiProviderService->sendChatCompletion(
                 $aiModel,

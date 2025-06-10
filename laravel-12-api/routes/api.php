@@ -33,9 +33,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Model management
     Route::put('/ai-models/{aiModel}', [AiProvidersController::class, 'updateModel']);
     Route::post('/ai-models/{aiModel}/chat', [AiProvidersController::class, 'chatCompletion']);
+    Route::get('/ai-models', [AiProvidersController::class, 'getAllModels']);
+    Route::get('/ai-models/active', [AiProvidersController::class, 'getActiveModels']);
+    
+    // Widget management
+    Route::apiResource('widgets', WidgetController::class);
+    Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggleStatus']);
+    Route::post('/widgets/{widget}/duplicate', [WidgetController::class, 'duplicate']);
+    Route::patch('/widgets/{widget}/publish', [WidgetController::class, 'publish']);
+    Route::get('/widgets/{widget}/statistics', [WidgetController::class, 'statistics']);
 
 
-     // Widget management
-     Route::apiResource('widgets', WidgetController::class);
-     Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggleStatus']);
 });
