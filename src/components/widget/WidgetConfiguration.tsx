@@ -8,6 +8,7 @@ import { WidgetTemplates } from './WidgetTemplates';
 import { ConfigurationTabs } from './ConfigurationTabs';
 import { EmbedCodeGenerator } from '../embed/EmbedCodeGenerator';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useWidget } from '@/hooks/useWidget';
 
 export interface WidgetConfig {
   theme: 'light' | 'dark' | 'auto';
@@ -69,7 +70,7 @@ interface WidgetConfigurationProps {
 export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps) => {
   const [config, setConfig] = useState<WidgetConfig>(defaultConfig);
   const [activeTab, setActiveTab] = useState('design');
-
+  const { currentWidget } = useWidget();
   const updateConfig = (updates: Partial<WidgetConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
   };
@@ -141,7 +142,11 @@ export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps)
         <TabsContent value="embed" className="mt-6">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <EmbedCodeGenerator config={config} />
+              <EmbedCodeGenerator
+                config={config}
+                widgetId={currentWidget?.id ?? 0}
+                userId={currentWidget?.user_id ?? 0}
+              />
             </div>
 
             <div className="xl:sticky xl:top-6">

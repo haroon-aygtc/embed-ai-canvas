@@ -58,6 +58,8 @@ class AuthApiClient {
       "Content-Type": "application/json",
       Accept: "application/json",
       "X-Requested-With": "XMLHttpRequest",
+      "X-XSRF-TOKEN": this.getCsrfToken(),
+      credentials: "include",
     };
 
     if (this.token) {
@@ -65,6 +67,10 @@ class AuthApiClient {
     }
 
     return headers;
+  }
+
+  private getCsrfToken(): string {
+    return document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1] || "";
   }
 
   private async request<T>(
@@ -81,7 +87,7 @@ class AuthApiClient {
     try {
       const response = await fetch(url, config);
       const data = await response.json();
-
+ 
       if (!response.ok) {
         throw {
           success: false,
@@ -108,7 +114,7 @@ class AuthApiClient {
     }
   }
 
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
+  async login(credentials: LoginRequest): Promise<AuthResponse> {    
     const response = await this.request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),

@@ -12,16 +12,16 @@ export interface ApiProvider {
   region?: string;
   is_active: boolean;
   status:
-    | "unconfigured"
-    | "configuring"
-    | "testing"
-    | "test-failed"
-    | "test-passed"
-    | "saving"
-    | "configured"
-    | "fetching-models"
-    | "ready"
-    | "error";
+  | "unconfigured"
+  | "configuring"
+  | "testing"
+  | "test-failed"
+  | "test-passed"
+  | "saving"
+  | "configured"
+  | "fetching-models"
+  | "ready"
+  | "error";
   last_tested_at?: string;
   last_saved_at?: string;
   test_result?: {
@@ -106,6 +106,50 @@ export interface ChatCompletionResponse {
   response_time: number;
 }
 
+export interface Widget {
+  id: number;
+  user_id: number;
+  name: string;
+  enabled: boolean;
+  configuration: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WidgetConfiguration {
+  title: string;
+  subtitle: string;
+  enabled: boolean;
+  showBranding: boolean;
+  selectedModelId: string | null;
+}
+
+export interface CreateWidgetRequest {
+  name: string;
+  enabled: boolean;
+  configuration: Record<string, any>;
+}
+
+export interface UpdateWidgetRequest {
+  name?: string;
+  enabled?: boolean;
+  configuration?: Record<string, any>;
+}
+
+export interface ToggleWidgetStatusRequest {
+  enabled: boolean;
+}
+
+
+export interface ToggleWidgetStatusResponse {
+  id: number;
+  enabled: boolean;
+  last_updated_at: string;
+}
+
+
+
+
 // API Client Class
 class ApiClient {
   private baseURL: string;
@@ -116,8 +160,12 @@ class ApiClient {
     this.headers = {
       "Content-Type": "application/json",
       Accept: "application/json",
+
     };
   }
+
+
+
 
   private async request<T>(
     endpoint: string,
@@ -136,8 +184,8 @@ class ApiClient {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.message ||
-            errorData.error ||
-            `HTTP ${response.status}: ${response.statusText}`,
+          errorData.error ||
+          `HTTP ${response.status}: ${response.statusText}`,
         );
       }
 
@@ -232,6 +280,49 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify(data),
     });
+  }
+
+  // Widget endpoints
+  async getWidgets(): Promise<{ data: Widget[] }> {
+    return this.request<{ data: Widget[] }>("/widgets");
+  }
+
+  async getWidget(id: number): Promise<{ data: Widget }> {
+    return this.request<{ data: Widget }>(`/widgets/${id}`);
+  }
+
+  async createWidget(data: CreateWidgetRequest): Promise<{ data: Widget }> {
+    return this.request<{ data: Widget }>("/widgets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateWidget(
+    id: number,
+    data: UpdateWidgetRequest,
+  ): Promise<{ data: Widget }> {
+    return this.request<{ data: Widget }>(`/widgets/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteWidget(id: number): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(`/widgets/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async toggleWidgetStatus(
+    id: number,
+  ): Promise<{ data: { id: number; enabled: boolean; last_updated_at: string } }> {
+    return this.request<{ data: { id: number; enabled: boolean; last_updated_at: string } }>(
+      `/widgets/${id}/toggle`,
+      {
+        method: "PATCH",
+      },
+    );
   }
 }
 

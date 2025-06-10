@@ -202,6 +202,16 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
               subtitle: 'Powered by ChatWidget Pro',
               enabled: true,
               showBranding: true,
+              knowledgeBase: {
+                selectedKnowledgeBases: [],
+                sources: [],
+                settings: {
+                  autoLearning: true,
+                  contextAwareness: true,
+                  realTimeUpdates: false,
+                  confidenceThreshold: true
+                }
+              }
             })}
           >
             Start Blank

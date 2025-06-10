@@ -17,9 +17,9 @@ return [
 
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
         '%s%s%s',
-        'localhost,localhost:3000,localhost:8080,127.0.0.1,127.0.0.1:8000,127.0.0.1:8080,::1,xenodochial-haslett6-vhlut.view-3.tempo-dev.app',
+        'localhost,localhost:3000,localhost:8080,127.0.0.1,127.0.0.1:8000,127.0.0.1:8080,::1',
         Sanctum::currentApplicationUrlWithPort(),
-        ',*.tempo-dev.app'
+        ','
     ))),
 
     /*

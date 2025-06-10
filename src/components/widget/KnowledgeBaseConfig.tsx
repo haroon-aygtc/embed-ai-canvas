@@ -198,7 +198,7 @@ export const KnowledgeBaseConfig = ({ config, onConfigChange }: KnowledgeBaseCon
                     Configure which knowledge bases your widget can access and how it responds to visitor questions.
                 </p>
             </div>
-    
+
             {/* Sub-tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
@@ -229,79 +229,51 @@ export const KnowledgeBaseConfig = ({ config, onConfigChange }: KnowledgeBaseCon
                             <Button variant="outline" size="sm" onClick={deselectAll}>
                                 Clear All
                             </Button>
-                           
+
                             <Button variant="default" size="sm">
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage Knowledge Bases
-                        </Button>
-                     
-                        <Button variant="outline" size="sm">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create New
-                        </Button>
+                                <Settings className="h-4 w-4 mr-2" />
+                                Manage Knowledge Bases
+                            </Button>
+
+                            <Button variant="outline" size="sm">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create New
+                            </Button>
                         </div>
                     </div>
 
-                    {/* 2-Column Card Layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {availableKnowledgeBases.map((kb) => {
-                            const TypeIcon = getTypeIcon(kb.type);
-                            const isSelected = selectedKnowledgeBases.includes(kb.id);
-                            const canSelect = kb.status === 'ready';
-
-                            return (
-                                <Card
-                                    key={kb.id}
-                                    className={`cursor-pointer transition-all hover:shadow-md ${isSelected
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md'
-                                        : canSelect
-                                            ? 'hover:border-blue-300'
-                                            : 'opacity-60 cursor-not-allowed'
-                                        }`}
-                                    onClick={() => toggleKnowledgeBase(kb.id)}
-                                >
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center space-x-2">
-                                                <TypeIcon className="h-5 w-5 text-muted-foreground" />
-                                                <Badge variant="outline" className="text-xs">
-                                                    {getTypeLabel(kb.type)}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Badge className={`text-xs ${getStatusColor(kb.status)}`}>
-                                                    {getStatusLabel(kb.status)}
-                                                </Badge>
-                                                {isSelected && canSelect && (
-                                                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                                                        <Check className="h-3 w-3 text-white" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <h5 className="font-medium text-sm">{kb.name}</h5>
-                                            <p className="text-xs text-muted-foreground line-clamp-2">
-                                                {kb.description}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                                            <span className="text-xs text-muted-foreground">
-                                                {kb.sources} sources
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                Updated {kb.lastUpdated}
-                                            </span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
+                    {/* Knowledge Base Placeholder Notice */}
+                    <div className="p-6 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <Database className="h-6 w-6 text-amber-600 mt-0.5" />
+                            <div>
+                                <h4 className="text-base font-medium text-amber-900 dark:text-amber-100 mb-2">
+                                    Knowledge Base Integration Coming Soon
+                                </h4>
+                                <p className="text-sm text-amber-800 dark:text-amber-200 mb-4">
+                                    The knowledge base feature is currently under development. Once available, you'll be able to:
+                                </p>
+                                <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 mb-4">
+                                    <li>• Upload documents and create knowledge bases</li>
+                                    <li>• Connect your website content and FAQs</li>
+                                    <li>• Train your AI on custom data sources</li>
+                                    <li>• Configure intelligent response settings</li>
+                                </ul>
+                                <div className="flex items-center space-x-2">
+                                    <Button variant="outline" size="sm" disabled>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Knowledge Base
+                                    </Button>
+                                    <Button variant="outline" size="sm" disabled>
+                                        <ExternalLink className="h-4 w-4 mr-2" />
+                                        Learn More
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                
+
 
                     {/* Help Section */}
                     <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">

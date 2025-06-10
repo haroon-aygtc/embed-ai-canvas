@@ -66,4 +66,12 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(AiModel::class, AiProvider::class);
     }
+
+    /**
+     * Get the widgets for the user.
+     */
+    public function widgets()
+    {
+        return $this->hasMany(Widget::class);
+    }
 }
