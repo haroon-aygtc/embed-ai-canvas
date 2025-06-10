@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('avatar_url', 500)->nullable();
+            $table->string('company_name')->nullable();
+            $table->enum('role', ['admin', 'user', 'viewer'])->default('user');
+            $table->enum('subscription_tier', ['free', 'pro', 'enterprise'])->default('free');
             $table->rememberToken();
             $table->timestamps();
         });
