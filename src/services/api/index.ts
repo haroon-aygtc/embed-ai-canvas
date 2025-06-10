@@ -4,17 +4,38 @@ export * from './base';
 export * from './auth';
 export * from './widgets';
 export * from './providers';
+export * from './widgetcontentapi';
+export * from './widgetTemplatesapi';
+export * from './widgetChatsapi';
+export * from './widgetConfigurationsapi';
+export * from './widgetBehaviorapi';
+export * from './widgetAnalyticsapi';
+export * from './knowledgeBasesapi';
 
 // Import all API clients
 import { authApi } from './auth';
 import { widgetApi } from './widgets';
 import { providersApi } from './providers';
+import { widgetContentApi } from './widgetcontentapi';
+import { widgetTemplatesApi } from './widgetTemplatesapi';
+import { widgetChatsApi } from './widgetChatsapi';
+import { widgetConfigurationsApi } from './widgetConfigurationsapi';
+import { widgetBehaviorApi } from './widgetBehaviorapi';
+import { widgetAnalyticsApi } from './widgetAnalyticsapi';
+import { knowledgeBasesApi } from './knowledgeBasesapi';
 
 // Unified API client class
 export class ApiClient {
     public auth = authApi;
     public widgets = widgetApi;
     public providers = providersApi;
+    public widgetContent = widgetContentApi;
+    public widgetTemplates = widgetTemplatesApi;
+    public widgetChats = widgetChatsApi;
+    public widgetConfigurations = widgetConfigurationsApi;
+    public widgetBehavior = widgetBehaviorApi;
+    public widgetAnalytics = widgetAnalyticsApi;
+    public knowledgeBases = knowledgeBasesApi;
 
     /**
      * Set authentication token for all API clients
@@ -23,6 +44,13 @@ export class ApiClient {
         this.auth.setAuthToken(token);
         this.widgets.setAuthToken(token);
         this.providers.setAuthToken(token);
+        this.widgetContent.setAuthToken(token);
+        this.widgetTemplates.setAuthToken(token);
+        this.widgetChats.setAuthToken(token);
+        this.widgetConfigurations.setAuthToken(token);
+        this.widgetBehavior.setAuthToken(token);
+        this.widgetAnalytics.setAuthToken(token);
+        this.knowledgeBases.setAuthToken(token);
     }
 
     /**
@@ -37,6 +65,15 @@ export class ApiClient {
      */
     clearAuth() {
         this.setAuthToken(null);
+    }
+
+    // Legacy methods for backward compatibility
+    async getAllModels() {
+        return this.providers.getAllModels();
+    }
+
+    async chatCompletion(modelId: string, data: any) {
+        return this.providers.sendChatCompletion(modelId, data);
     }
 }
 
@@ -63,7 +100,81 @@ export const {
     duplicateWidget,
     publishWidget,
     getWidgetStatistics,
+    exportWidgetStatistics,
 } = apiClient.widgets;
+
+export const {
+    // Widget Chat methods
+    getConversations,
+    createConversation,
+    getConversationMessages,
+    sendMessage,
+    endConversation,
+} = apiClient.widgetChats;
+
+export const {
+    // Widget Content methods
+    getQuickResponses,
+    createQuickResponse,
+    updateQuickResponse,
+    deleteQuickResponse,
+    getConversationStarters,
+    createConversationStarter,
+    updateConversationStarter,
+    deleteConversationStarter,
+} = apiClient.widgetContent;
+
+export const {
+    // Widget Templates methods
+    getTemplates,
+    getPopularTemplates,
+    getTemplatesByCategory,
+} = apiClient.widgetTemplates;
+
+export const {
+    // Widget Configuration methods
+    getConfigurations,
+    getActiveConfiguration,
+    createConfiguration,
+    updateConfiguration,
+    activateConfiguration,
+    rollbackConfiguration,
+    compareConfigurations,
+    getConfigurationHistory,
+    deleteConfiguration,
+} = apiClient.widgetConfigurations;
+
+export const {
+    // Widget Behavior methods
+    getBehaviorSettings,
+    createBehaviorSettings,
+    updateBehaviorSettings,
+    getOperatingHours,
+    updateOperatingHours,
+} = apiClient.widgetBehavior;
+
+export const {
+    // Widget Analytics methods
+    getAnalytics,
+    getConversationAnalytics,
+    getMessageAnalytics,
+    exportAnalytics,
+} = apiClient.widgetAnalytics;
+
+export const {
+    // Knowledge Base methods
+    getKnowledgeBases,
+    getKnowledgeBase,
+    createKnowledgeBase,
+    updateKnowledgeBase,
+    deleteKnowledgeBase,
+    uploadDocuments,
+    getDocuments,
+    deleteDocument,
+    processKnowledgeBase,
+    getProcessingStatus,
+    searchKnowledgeBase,
+} = apiClient.knowledgeBases;
 
 export const {
     // Provider methods
@@ -159,127 +270,85 @@ function getProviderDescription(slug: string): string {
         xai: "Grok AI models from xAI",
         codestral: "Code-specialized AI models",
     };
-    return descriptions[slug] || "AI provider";
+    return descriptions[slug] || "Advanced AI language model";
 }
 
 function getProviderPricing(slug: string) {
-    const pricing: Record<
-        string,
-        { inputCost: string; outputCost: string; currency: string }
-    > = {
-        openai: { inputCost: "$0.03", outputCost: "$0.06", currency: "USD" },
-        anthropic: { inputCost: "$0.015", outputCost: "$0.075", currency: "USD" },
-        groq: { inputCost: "$0.0008", outputCost: "$0.0008", currency: "USD" },
-        google: { inputCost: "$0.001", outputCost: "$0.002", currency: "USD" },
-        mistral: { inputCost: "$0.002", outputCost: "$0.006", currency: "USD" },
-        meta: { inputCost: "$0.0005", outputCost: "$0.0015", currency: "USD" },
-        cohere: { inputCost: "$0.001", outputCost: "$0.002", currency: "USD" },
-        huggingface: {
-            inputCost: "$0.0005",
-            outputCost: "$0.0015",
+    const pricing: Record<string, any> = {
+        openai: {
+            tier: "Premium",
+            inputCost: 0.03,
+            outputCost: 0.06,
             currency: "USD",
+            unit: "1K tokens"
         },
-        perplexity: { inputCost: "$0.001", outputCost: "$0.002", currency: "USD" },
-        openrouter: { inputCost: "$0.002", outputCost: "$0.004", currency: "USD" },
-        xai: { inputCost: "$0.005", outputCost: "$0.015", currency: "USD" },
-        codestral: { inputCost: "$0.002", outputCost: "$0.006", currency: "USD" },
-    };
-    return (
-        pricing[slug] || {
-            inputCost: "$0.001",
-            outputCost: "$0.002",
+        anthropic: {
+            tier: "Premium",
+            inputCost: 0.03,
+            outputCost: 0.15,
             currency: "USD",
-        }
-    );
+            unit: "1K tokens"
+        },
+        groq: {
+            tier: "Performance",
+            inputCost: 0.10,
+            outputCost: 0.10,
+            currency: "USD",
+            unit: "1M tokens"
+        },
+        google: {
+            tier: "Enterprise",
+            inputCost: 0.125,
+            outputCost: 0.375,
+            currency: "USD",
+            unit: "1M tokens"
+        },
+        // Add more providers as needed
+    };
+    return pricing[slug] || {
+        tier: "Standard",
+        inputCost: 0.01,
+        outputCost: 0.02,
+        currency: "USD",
+        unit: "1K tokens"
+    };
 }
 
 function getProviderFeatures(slug: string): string[] {
     const features: Record<string, string[]> = {
-        openai: ["Function Calling", "Vision", "Code Interpreter", "JSON Mode"],
-        anthropic: [
-            "Constitutional AI",
-            "Long Context",
-            "Safety Focused",
-            "Reasoning",
-        ],
-        groq: ["Ultra-Fast", "Low Latency", "Open Source Models", "Cost Effective"],
-        google: ["Multimodal", "Search Integration", "Large Context", "Reasoning"],
-        mistral: ["Multilingual", "European AI", "Code Generation", "Reasoning"],
-        meta: ["Open Source", "Code Generation", "Multilingual", "Research"],
-        cohere: ["Enterprise", "Embeddings", "Classification", "Generation"],
-        huggingface: ["Open Source", "Model Hub", "Custom Models", "Community"],
-        perplexity: ["Search", "Real-time", "Citations", "Reasoning"],
-        openrouter: ["Multi-Provider", "Unified API", "Model Selection", "Routing"],
-        xai: ["Grok", "Real-time", "Twitter Integration", "Reasoning"],
-        codestral: [
-            "Code Generation",
-            "Code Completion",
-            "Debugging",
-            "Refactoring",
-        ],
+        openai: ["Function Calling", "Vision", "Code Generation", "JSON Mode"],
+        anthropic: ["Constitutional AI", "Long Context", "Safety Focused", "Reasoning"],
+        groq: ["Ultra Fast", "Real-time", "Low Latency", "High Throughput"],
+        google: ["Multimodal", "Search Integration", "Enterprise Ready", "Scalable"],
+        mistral: ["Multilingual", "European", "Code Generation", "Efficient"],
+        meta: ["Open Source", "Research Focused", "Llama Models", "Community"],
+        // Add more providers as needed
     };
-    return features[slug] || ["AI Generation", "Text Processing"];
+    return features[slug] || ["Text Generation", "Chat Completion"];
 }
 
 function getProviderLimits(slug: string) {
-    const limits: Record<
-        string,
-        { rateLimit: string; contextWindow: string; maxTokens: string }
-    > = {
+    const limits: Record<string, any> = {
         openai: {
-            rateLimit: "10,000 RPM",
-            contextWindow: "128K",
-            maxTokens: "4,096",
+            requestsPerMinute: 3500,
+            tokensPerMinute: 90000,
+            requestsPerDay: 10000
         },
         anthropic: {
-            rateLimit: "5,000 RPM",
-            contextWindow: "200K",
-            maxTokens: "4,096",
+            requestsPerMinute: 1000,
+            tokensPerMinute: 40000,
+            requestsPerDay: 5000
         },
-        groq: { rateLimit: "30,000 RPM", contextWindow: "32K", maxTokens: "8,192" },
-        google: {
-            rateLimit: "15,000 RPM",
-            contextWindow: "1M",
-            maxTokens: "8,192",
+        groq: {
+            requestsPerMinute: 30,
+            tokensPerMinute: 6000,
+            requestsPerDay: 14400
         },
-        mistral: {
-            rateLimit: "5,000 RPM",
-            contextWindow: "32K",
-            maxTokens: "4,096",
-        },
-        meta: { rateLimit: "10,000 RPM", contextWindow: "32K", maxTokens: "4,096" },
-        cohere: {
-            rateLimit: "10,000 RPM",
-            contextWindow: "128K",
-            maxTokens: "4,096",
-        },
-        huggingface: {
-            rateLimit: "1,000 RPM",
-            contextWindow: "32K",
-            maxTokens: "2,048",
-        },
-        perplexity: {
-            rateLimit: "5,000 RPM",
-            contextWindow: "16K",
-            maxTokens: "4,096",
-        },
-        openrouter: {
-            rateLimit: "20,000 RPM",
-            contextWindow: "128K",
-            maxTokens: "4,096",
-        },
-        xai: { rateLimit: "5,000 RPM", contextWindow: "128K", maxTokens: "4,096" },
-        codestral: {
-            rateLimit: "5,000 RPM",
-            contextWindow: "32K",
-            maxTokens: "4,096",
-        },
+        // Add more providers as needed
     };
-    return (
-        limits[slug] || {
-            rateLimit: "5,000 RPM",
-            contextWindow: "32K",
-            maxTokens: "4,096",
-        }
-    );
+    return limits[slug] || {
+        requestsPerMinute: 1000,
+        tokensPerMinute: 20000,
+        requestsPerDay: 5000
+    };
 } 

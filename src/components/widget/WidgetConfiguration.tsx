@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Code2, Eye, Sparkles } from 'lucide-react';
-import { WidgetPreview } from './WidgetPreview';
-import { WidgetTemplates } from './WidgetTemplates';
-import { ConfigurationTabs } from './ConfigurationTabs';
-import { EmbedCodeGenerator } from '../embed/EmbedCodeGenerator';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { useWidget } from '@/hooks/useWidget';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Palette, Code2, Eye, Sparkles } from "lucide-react";
+import { WidgetPreview } from "./WidgetPreview";
+import { WidgetTemplates } from "./WidgetTemplates";
+import { ConfigurationTabs } from "./ConfigurationTabs";
+import { EmbedCodeGenerator } from "../embed/EmbedCodeGenerator";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { useWidget } from "@/hooks/useWidget";
+import { apiClient } from "@/services/api";
 
 export interface WidgetConfig {
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
   primaryColor: string;
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  size: 'small' | 'medium' | 'large';
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  size: "small" | "medium" | "large";
   welcomeMessage: string;
   placeholder: string;
   title: string;
@@ -27,8 +34,8 @@ export interface WidgetConfig {
     sources: Array<{
       id: string;
       name: string;
-      type: 'docs' | 'faq' | 'tickets' | 'custom';
-      status: 'active' | 'training' | 'inactive';
+      type: "docs" | "faq" | "tickets" | "custom";
+      status: "active" | "training" | "inactive";
     }>;
     settings: {
       autoLearning: boolean;
@@ -40,17 +47,17 @@ export interface WidgetConfig {
 }
 
 const defaultConfig: WidgetConfig = {
-  theme: 'light',
-  primaryColor: '#3b82f6',
-  position: 'bottom-right',
-  size: 'medium',
-  welcomeMessage: 'Hello! How can I help you today?',
-  placeholder: 'Type your message...',
-  title: 'AI Assistant',
-  subtitle: 'Powered by ChatWidget Pro',
+  theme: "light",
+  primaryColor: "#3b82f6",
+  position: "bottom-right",
+  size: "medium",
+  welcomeMessage: "Hello! How can I help you today?",
+  placeholder: "Type your message...",
+  title: "AI Assistant",
+  subtitle: "Powered by ChatWidget Pro",
   enabled: true,
   showBranding: true,
-  selectedModelId: 'gpt-4',
+  selectedModelId: "gpt-4",
   knowledgeBase: {
     selectedKnowledgeBases: [],
     sources: [],
@@ -58,35 +65,100 @@ const defaultConfig: WidgetConfig = {
       autoLearning: true,
       contextAwareness: true,
       realTimeUpdates: false,
-      confidenceThreshold: true
-    }
-  }
+      confidenceThreshold: true,
+    },
+  },
 };
 
 interface WidgetConfigurationProps {
   onSetupWizard?: () => void;
 }
 
-export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps) => {
+export const WidgetConfiguration = ({
+  onSetupWizard,
+}: WidgetConfigurationProps) => {
   const [config, setConfig] = useState<WidgetConfig>(defaultConfig);
-  const [activeTab, setActiveTab] = useState('design');
-  const { currentWidget } = useWidget();
-  const updateConfig = (updates: Partial<WidgetConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+  const [activeTab, setActiveTab] = useState("design");
+  const {
+    widgets,
+    currentWidget,
+    isLoading,
+    error,
+    createWidget,
+    updateWidget,
+    clearError,
+  } = useWidget();
+
+  // Load configuration from current widget when it changes
+  React.useEffect(() => {
+    if (currentWidget?.configuration) {
+      setConfig((prev) => ({ ...prev, ...currentWidget.configuration }));
+    }
+  }, [currentWidget]);
+  const updateConfig = async (updates: Partial<WidgetConfig>) => {
+    setConfig((prev) => ({ ...prev, ...updates }));
+
+    // If we have a current widget, save the changes to the backend
+    if (currentWidget) {
+      try {
+        await updateWidget(currentWidget.id, {
+          configuration: { ...config, ...updates },
+        });
+      } catch (error) {
+        console.error("Failed to save widget configuration:", error);
+        // Optionally show a toast notification here
+      }
+    }
   };
 
-  const handleTemplateSelect = (templateConfig: WidgetConfig) => {
+  const handleTemplateSelect = async (templateConfig: WidgetConfig) => {
     setConfig(templateConfig);
-    setActiveTab('design'); // Switch to design tab after selecting template
+    setActiveTab("design"); // Switch to design tab after selecting template
+
+    // If we have a current widget, save the template configuration
+    if (currentWidget) {
+      try {
+        await updateWidget(currentWidget.id, {
+          configuration: templateConfig,
+        });
+      } catch (error) {
+        console.error("Failed to apply template:", error);
+      }
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!currentWidget) return;
+
+    try {
+      await updateWidget(currentWidget.id, {
+        configuration: config,
+        status: "draft",
+      });
+      // Show success message
+    } catch (error) {
+      console.error("Failed to save draft:", error);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!currentWidget) return;
+
+    try {
+      await apiClient.widgets.publishWidget(currentWidget.id);
+      // Show success message
+    } catch (error) {
+      console.error("Failed to publish widget:", error);
+    }
   };
 
   const headerActions = (
     <>
-      <Button variant="outline">
-        Save Draft
+      <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
+        {isLoading ? "Saving..." : "Save Draft"}
       </Button>
-      <Button>
-        Publish Changes
+      <Button onClick={handlePublish} disabled={isLoading}>
+        {isLoading ? "Publishing..." : "Publish Changes"}
       </Button>
     </>
   );
@@ -130,7 +202,10 @@ export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps)
         <TabsContent value="design" className="mt-6">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <ConfigurationTabs config={config} onConfigChange={updateConfig} />
+              <ConfigurationTabs
+                config={config}
+                onConfigChange={updateConfig}
+              />
             </div>
 
             <div className="xl:sticky xl:top-6">
@@ -144,8 +219,6 @@ export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps)
             <div className="xl:col-span-2">
               <EmbedCodeGenerator
                 config={config}
-                widgetId={currentWidget?.id ?? 0}
-                userId={currentWidget?.user_id ?? 0}
               />
             </div>
 

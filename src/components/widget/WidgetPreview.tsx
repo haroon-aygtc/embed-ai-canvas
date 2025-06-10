@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, X, Send, Minimize2, Maximize2, Sun, Moon, Move } from 'lucide-react';
 import { WidgetConfig } from './WidgetConfiguration';
+import { PREVIEW_POSITION_OPTIONS } from '@/lib/constants/widget-constants';
 
 interface WidgetPreviewProps {
   config: WidgetConfig;
@@ -93,12 +94,8 @@ export const WidgetPreview = ({ config, onConfigChange }: WidgetPreviewProps) =>
     }
   };
 
-  const positionOptions = [
-    { id: 'top-left', label: 'Top Left', classes: 'top-6 left-6' },
-    { id: 'top-right', label: 'Top Right', classes: 'top-6 right-6' },
-    { id: 'bottom-left', label: 'Bottom Left', classes: 'bottom-6 left-6' },
-    { id: 'bottom-right', label: 'Bottom Right', classes: 'bottom-6 right-6' },
-  ] as const;
+  // Use position options from constants
+  const positionOptions = PREVIEW_POSITION_OPTIONS;
 
   return (
     <Card className="h-full">
@@ -174,8 +171,8 @@ export const WidgetPreview = ({ config, onConfigChange }: WidgetPreviewProps) =>
                   key={option.id}
                   onClick={() => handlePositionChange(option.id)}
                   className={`absolute z-20 w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 ${config.position === option.id
-                      ? 'bg-blue-500 border-blue-600 shadow-lg scale-110'
-                      : 'bg-white/90 dark:bg-gray-800/90 border-gray-300 dark:border-gray-600 hover:border-blue-400 shadow-md backdrop-blur-sm'
+                    ? 'bg-blue-500 border-blue-600 shadow-lg scale-110'
+                    : 'bg-white/90 dark:bg-gray-800/90 border-gray-300 dark:border-gray-600 hover:border-blue-400 shadow-md backdrop-blur-sm'
                     } ${option.classes}`}
                   title={`Move to ${option.label}`}
                 >
@@ -247,8 +244,8 @@ export const WidgetPreview = ({ config, onConfigChange }: WidgetPreviewProps) =>
                         >
                           <div
                             className={`max-w-[75%] p-3 rounded-lg text-sm leading-relaxed ${message.isUser
-                                ? 'text-white rounded-br-sm'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-sm'
+                              ? 'text-white rounded-br-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-sm'
                               }`}
                             style={message.isUser ? { backgroundColor: config.primaryColor } : {}}
                           >

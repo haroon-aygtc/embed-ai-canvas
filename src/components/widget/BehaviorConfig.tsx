@@ -1,64 +1,97 @@
-import React, { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Input, InputCompact } from '@/components/ui/input';
-import { SearchableSelect } from '@/components/ui/combobox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Users, Target, MessageCircle, Settings, Plus, X, Calendar } from 'lucide-react';
-import { WidgetConfig } from './WidgetConfiguration';
+import React, { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input, InputCompact } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Clock,
+  Users,
+  Target,
+  MessageCircle,
+  Settings,
+  Plus,
+  X,
+  Calendar,
+  Loader2,
+} from "lucide-react";
+import { WidgetConfig } from "./WidgetConfiguration";
+import { useWidgetBehavior } from "@/hooks/useWidgetBehavior";
+import { useWidget } from "@/hooks/useWidget";
+import { AUTO_OPEN_TRIGGERS, DAYS_OF_WEEK } from "@/lib/constants/widget-constants";
 
 interface BehaviorConfigProps {
   config: WidgetConfig;
   onConfigChange: (updates: Partial<WidgetConfig>) => void;
 }
 
-export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) => {
-  const [operatingHours, setOperatingHours] = useState([
-    { day: 'Monday', enabled: true, start: '09:00', end: '17:00' },
-    { day: 'Tuesday', enabled: true, start: '09:00', end: '17:00' },
-    { day: 'Wednesday', enabled: true, start: '09:00', end: '17:00' },
-    { day: 'Thursday', enabled: true, start: '09:00', end: '17:00' },
-    { day: 'Friday', enabled: true, start: '09:00', end: '17:00' },
-    { day: 'Saturday', enabled: false, start: '09:00', end: '17:00' },
-    { day: 'Sunday', enabled: false, start: '09:00', end: '17:00' },
-  ]);
+export const BehaviorConfig = ({
+  config,
+  onConfigChange,
+}: BehaviorConfigProps) => {
+  const { currentWidget } = useWidget();
+  const widgetId = currentWidget?.id;
 
-  const triggerOptions = [
-    {
-      id: 'immediate',
-      label: 'Immediate',
-      description: 'Open widget as soon as page loads',
-      icon: '⚡'
-    },
-    {
-      id: 'time',
-      label: 'Time Delay',
-      description: 'Open after visitor spends time on page',
-      icon: '⏱️'
-    },
-    {
-      id: 'scroll',
-      label: 'Scroll Trigger',
-      description: 'Open when visitor scrolls down the page',
-      icon: '📜'
-    },
-    {
-      id: 'exit',
-      label: 'Exit Intent',
-      description: 'Open when visitor is about to leave',
-      icon: '🚪'
+  // Use real API data instead of hardcoded arrays
+  const {
+    behaviorConfig,
+    operatingHours,
+    isLoading,
+    error,
+    loadBehaviorSettings,
+    updateBehaviorSettings,
+    loadOperatingHours,
+    updateOperatingHours,
+  } = useWidgetBehavior();
+
+  // Load data when widget ID is available
+  useEffect(() => {
+    if (widgetId) {
+      loadBehaviorSettings(widgetId);
+      loadOperatingHours(widgetId);
     }
-  ];
+  }, [widgetId, loadBehaviorSettings, loadOperatingHours]);
+
+  // Import trigger options from constants
+  const triggerOptions = AUTO_OPEN_TRIGGERS;
+
+  const handleBehaviorUpdate = async (updates: any) => {
+    if (!widgetId) return;
+
+    const updatedConfig = {
+      ...behaviorConfig,
+      ...updates,
+    };
+
+    await updateBehaviorSettings(widgetId, updatedConfig);
+  };
+
+  const handleOperatingHoursUpdate = async (dayIndex: number, updates: any) => {
+    if (!widgetId || !operatingHours) return;
+
+    const updatedHours = [...operatingHours];
+    updatedHours[dayIndex] = { ...updatedHours[dayIndex], ...updates };
+
+    await updateOperatingHours(widgetId, updatedHours);
+  };
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h3 className="text-lg font-semibold mb-2">Widget Behavior Settings</h3>
-        <p className="text-sm text-muted-foreground">Configure advanced behavior, triggers, and operating hours</p>
+        <p className="text-sm text-muted-foreground">
+          Configure advanced behavior, triggers, and operating hours
+        </p>
       </div>
 
       <Tabs defaultValue="basic" className="w-full">
@@ -84,11 +117,12 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
         <TabsContent value="basic" className="space-y-6 mt-6">
           {/* Dual Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
             {/* Left Column - Basic Settings */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Core Behavior</h4>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Core Behavior
+                </h4>
                 <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
                   <div className="flex items-start space-x-2">
                     <Settings className="h-4 w-4 text-blue-600 mt-0.5" />
@@ -97,7 +131,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                         Basic Widget Settings
                       </p>
                       <p className="text-xs text-blue-700 dark:text-blue-300">
-                        Widget enabled/disabled and branding settings are now configured in the <strong>Settings</strong> tab for better organization.
+                        Widget enabled/disabled and branding settings are now
+                        configured in the <strong>Settings</strong> tab for
+                        better organization.
                       </p>
                     </div>
                   </div>
@@ -107,7 +143,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Sound Notifications</Label>
+                    <Label className="text-base font-medium">
+                      Sound Notifications
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Play sound when new messages arrive
                     </p>
@@ -117,7 +155,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
 
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Typing Indicators</Label>
+                    <Label className="text-base font-medium">
+                      Typing Indicators
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show when the AI is typing a response
                     </p>
@@ -130,13 +170,17 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
             {/* Right Column - Advanced Settings */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Advanced Options</h4>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Advanced Options
+                </h4>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Message Persistence</Label>
+                    <Label className="text-base font-medium">
+                      Message Persistence
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Remember conversation when user returns
                     </p>
@@ -146,7 +190,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
 
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Auto-Minimize</Label>
+                    <Label className="text-base font-medium">
+                      Auto-Minimize
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Minimize widget after period of inactivity
                     </p>
@@ -161,12 +207,15 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
         <TabsContent value="triggers" className="space-y-6 mt-6">
           {/* Dual Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
             {/* Left Column - Auto-Open Triggers */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Auto-Open Triggers</h4>
-                <p className="text-sm text-muted-foreground mb-4">Configure when the widget should automatically open</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Auto-Open Triggers
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure when the widget should automatically open
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -180,12 +229,12 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium">{trigger.label}</h5>
-                          <Switch defaultChecked={trigger.id === 'immediate'} />
+                          <Switch defaultChecked={trigger.id === "immediate_trigger"} />
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {trigger.description}
                         </p>
-                        {trigger.id === 'time' && (
+                        {trigger.id === "time_delay_trigger" && (
                           <div className="mt-2 flex items-center space-x-2">
                             <Input
                               type="number"
@@ -193,10 +242,12 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                               className="w-20 h-8"
                               defaultValue="30"
                             />
-                            <span className="text-sm text-muted-foreground">seconds</span>
+                            <span className="text-sm text-muted-foreground">
+                              seconds
+                            </span>
                           </div>
                         )}
-                        {trigger.id === 'scroll' && (
+                        {trigger.id === "scroll_trigger" && (
                           <div className="mt-2 flex items-center space-x-2">
                             <Input
                               type="number"
@@ -204,7 +255,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                               className="w-20 h-8"
                               defaultValue="50"
                             />
-                            <span className="text-sm text-muted-foreground">% scrolled</span>
+                            <span className="text-sm text-muted-foreground">
+                              % scrolled
+                            </span>
                           </div>
                         )}
                       </div>
@@ -217,14 +270,20 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
             {/* Right Column - Proactive Messaging */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Proactive Messaging</h4>
-                <p className="text-sm text-muted-foreground mb-4">Send automated messages to engage visitors</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Proactive Messaging
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Send automated messages to engage visitors
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Enable Proactive Messages</Label>
+                    <Label className="text-base font-medium">
+                      Enable Proactive Messages
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Send helpful messages based on user behavior
                     </p>
@@ -233,17 +292,23 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Message Templates</Label>
+                  <Label className="text-sm font-medium">
+                    Message Templates
+                  </Label>
                   <div className="space-y-2">
                     <div className="p-3 bg-background rounded-lg border">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">👋 Need help finding something?</span>
+                        <span className="text-sm">
+                          👋 Need help finding something?
+                        </span>
                         <Badge variant="outline">30s delay</Badge>
                       </div>
                     </div>
                     <div className="p-3 bg-background rounded-lg border">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">💡 Have questions about our pricing?</span>
+                        <span className="text-sm">
+                          💡 Have questions about our pricing?
+                        </span>
                         <Badge variant="outline">Pricing page</Badge>
                       </div>
                     </div>
@@ -261,18 +326,23 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
         <TabsContent value="hours" className="space-y-6 mt-6">
           {/* Dual Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
             {/* Left Column - Operating Hours */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Operating Hours</h4>
-                <p className="text-sm text-muted-foreground mb-4">Set when your chat widget is available</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Operating Hours
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Set when your chat widget is available
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Enable Operating Hours</Label>
+                    <Label className="text-base font-medium">
+                      Enable Operating Hours
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show different behavior outside business hours
                     </p>
@@ -282,24 +352,25 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
 
                 <div className="space-y-3">
                   {operatingHours.map((schedule, index) => (
-                    <div key={schedule.day} className="flex items-center space-x-4 p-3 border rounded-lg">
+                    <div
+                      key={schedule.day}
+                      className="flex items-center space-x-4 p-3 border rounded-lg"
+                    >
                       <Switch
                         checked={schedule.enabled}
                         onCheckedChange={(enabled) => {
-                          const updated = [...operatingHours];
-                          updated[index].enabled = enabled;
-                          setOperatingHours(updated);
+                          handleOperatingHoursUpdate(index, { enabled });
                         }}
                       />
                       <div className="flex-1 grid grid-cols-3 gap-2 items-center">
-                        <span className="text-sm font-medium">{schedule.day}</span>
+                        <span className="text-sm font-medium">
+                          {schedule.day}
+                        </span>
                         <Input
                           type="time"
                           value={schedule.start}
                           onChange={(e) => {
-                            const updated = [...operatingHours];
-                            updated[index].start = e.target.value;
-                            setOperatingHours(updated);
+                            handleOperatingHoursUpdate(index, { start: e.target.value });
                           }}
                           className="h-8"
                           disabled={!schedule.enabled}
@@ -308,9 +379,7 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                           type="time"
                           value={schedule.end}
                           onChange={(e) => {
-                            const updated = [...operatingHours];
-                            updated[index].end = e.target.value;
-                            setOperatingHours(updated);
+                            handleOperatingHoursUpdate(index, { end: e.target.value });
                           }}
                           className="h-8"
                           disabled={!schedule.enabled}
@@ -325,8 +394,12 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
             {/* Right Column - Timezone & Offline Settings */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Timezone & Offline</h4>
-                <p className="text-sm text-muted-foreground mb-4">Configure timezone and offline behavior</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Timezone & Offline
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure timezone and offline behavior
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -338,16 +411,24 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="utc">🌍 UTC (GMT+0)</SelectItem>
-                      <SelectItem value="est">🇺🇸 Eastern Time (GMT-5)</SelectItem>
-                      <SelectItem value="pst">🇺🇸 Pacific Time (GMT-8)</SelectItem>
+                      <SelectItem value="est">
+                        🇺🇸 Eastern Time (GMT-5)
+                      </SelectItem>
+                      <SelectItem value="pst">
+                        🇺🇸 Pacific Time (GMT-8)
+                      </SelectItem>
                       <SelectItem value="gmt">🇬🇧 London (GMT+0)</SelectItem>
-                      <SelectItem value="cet">🇪🇺 Central Europe (GMT+1)</SelectItem>
+                      <SelectItem value="cet">
+                        🇪🇺 Central Europe (GMT+1)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-base font-medium">Offline Message</Label>
+                  <Label className="text-base font-medium">
+                    Offline Message
+                  </Label>
                   <Input
                     placeholder="We're currently offline. Leave a message!"
                     defaultValue="We're currently offline. Leave a message!"
@@ -356,7 +437,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
 
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Collect Offline Messages</Label>
+                    <Label className="text-base font-medium">
+                      Collect Offline Messages
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Allow visitors to leave messages when offline
                     </p>
@@ -371,18 +454,23 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
         <TabsContent value="targeting" className="space-y-6 mt-6">
           {/* Dual Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
             {/* Left Column - Visitor Targeting */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Visitor Targeting</h4>
-                <p className="text-sm text-muted-foreground mb-4">Show widget to specific visitor segments</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Visitor Targeting
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Show widget to specific visitor segments
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">New Visitors Only</Label>
+                    <Label className="text-base font-medium">
+                      New Visitors Only
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show widget only to first-time visitors
                     </p>
@@ -392,7 +480,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
 
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                   <div className="space-y-1">
-                    <Label className="text-base font-medium">Returning Visitors</Label>
+                    <Label className="text-base font-medium">
+                      Returning Visitors
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Show different behavior for returning visitors
                     </p>
@@ -401,7 +491,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-base font-medium">Geographic Targeting</Label>
+                  <Label className="text-base font-medium">
+                    Geographic Targeting
+                  </Label>
                   <Select defaultValue="all">
                     <SelectTrigger>
                       <SelectValue />
@@ -410,7 +502,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                       <SelectItem value="all">🌍 All Countries</SelectItem>
                       <SelectItem value="us">🇺🇸 United States</SelectItem>
                       <SelectItem value="eu">🇪🇺 European Union</SelectItem>
-                      <SelectItem value="custom">⚙️ Custom Countries</SelectItem>
+                      <SelectItem value="custom">
+                        ⚙️ Custom Countries
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -420,8 +514,12 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
             {/* Right Column - Page Targeting */}
             <div className="space-y-6">
               <div>
-                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Page Targeting</h4>
-                <p className="text-sm text-muted-foreground mb-4">Control which pages show the widget</p>
+                <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+                  Page Targeting
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Control which pages show the widget
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -433,7 +531,9 @@ export const BehaviorConfig = ({ config, onConfigChange }: BehaviorConfigProps) 
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">📄 All Pages</SelectItem>
-                      <SelectItem value="specific">🎯 Specific Pages</SelectItem>
+                      <SelectItem value="specific">
+                        🎯 Specific Pages
+                      </SelectItem>
                       <SelectItem value="exclude">🚫 Exclude Pages</SelectItem>
                     </SelectContent>
                   </Select>

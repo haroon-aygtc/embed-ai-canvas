@@ -58,8 +58,6 @@ class AuthApiClient {
       "Content-Type": "application/json",
       Accept: "application/json",
       "X-Requested-With": "XMLHttpRequest",
-      "X-XSRF-TOKEN": this.getCsrfToken(),
-      credentials: "include",
     };
 
     if (this.token) {
@@ -70,7 +68,9 @@ class AuthApiClient {
   }
 
   private getCsrfToken(): string {
-    return document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1] || "";
+    // For Laravel Sanctum, we don't need CSRF tokens for API requests
+    // Only for web routes. API routes use Bearer tokens.
+    return "";
   }
 
   private async request<T>(
@@ -80,14 +80,13 @@ class AuthApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const config: RequestInit = {
       headers: this.getHeaders(),
-      credentials: "include",
       ...options,
     };
 
     try {
       const response = await fetch(url, config);
       const data = await response.json();
- 
+
       if (!response.ok) {
         throw {
           success: false,
@@ -114,7 +113,7 @@ class AuthApiClient {
     }
   }
 
-  async login(credentials: LoginRequest): Promise<AuthResponse> {    
+  async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),

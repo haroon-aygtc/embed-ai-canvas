@@ -133,42 +133,12 @@ export class WidgetApiClient extends BaseApiClient {
         return this.post<any>(`/widgets/${id}/test`, testData);
     }
 
+    
     /**
-     * Get widget conversation history
+     * Export widget statistics
      */
-    async getConversations(id: number, params?: {
-        page?: number;
-        per_page?: number;
-        status?: 'active' | 'ended';
-        date_from?: string;
-        date_to?: string;
-    }): Promise<{ data: any }> {
-        const queryParams = new URLSearchParams();
-        if (params?.page) queryParams.append('page', params.page.toString());
-        if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
-        if (params?.status) queryParams.append('status', params.status);
-        if (params?.date_from) queryParams.append('date_from', params.date_from);
-        if (params?.date_to) queryParams.append('date_to', params.date_to);
-
-        const endpoint = `/widgets/${id}/conversations${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-        return this.get<any>(endpoint);
-    }
-
-    /**
-     * Get widget messages for a conversation
-     */
-    async getConversationMessages(widgetId: number, conversationId: number): Promise<{ data: any }> {
-        return this.get<any>(`/widgets/${widgetId}/conversations/${conversationId}/messages`);
-    }
-
-    /**
-     * Send a message in a conversation
-     */
-    async sendMessage(widgetId: number, conversationId: number, data: {
-        message: string;
-        is_user: boolean;
-    }): Promise<{ data: any }> {
-        return this.post<any>(`/widgets/${widgetId}/conversations/${conversationId}/messages`, data);
+    async exportWidgetStatistics(widgetId: number, format: 'csv' | 'pdf'): Promise<{ data: any }> {
+        return this.get<any>(`/widgets/${widgetId}/statistics/export?format=${format}`);
     }
 
     /**
@@ -179,6 +149,86 @@ export class WidgetApiClient extends BaseApiClient {
         feedback?: string;
     }): Promise<{ data: any }> {
         return this.patch<any>(`/widgets/${widgetId}/conversations/${conversationId}/end`, data);
+    }
+
+    /**
+     * Widget Templates
+     */
+    async getWidgetTemplates(params?: { category?: string; popular?: boolean }): Promise<{ data: any }> {
+        const queryParams = new URLSearchParams();
+        if (params?.category) queryParams.append('category', params.category);
+        if (params?.popular) queryParams.append('popular', 'true');
+
+        const query = queryParams.toString();
+        return this.get<any>(`/widget-templates${query ? `?${query}` : ''}`);
+    }
+
+    async getWidgetTemplate(templateId: number): Promise<{ data: any }> {
+        return this.get<any>(`/widget-templates/${templateId}`);
+    }
+
+    async getTemplateCategories(): Promise<{ data: any }> {
+        return this.get<any>('/widget-templates/categories');
+    }
+
+    /**
+     * Widget Content (Quick Responses & Conversation Starters)
+     */
+    async getWidgetContent(widgetId: number): Promise<{ data: any }> {
+        return this.get<any>(`/widgets/${widgetId}/content`);
+    }
+
+    async getQuickResponses(widgetId: number): Promise<{ data: any }> {
+        return this.get<any>(`/widgets/${widgetId}/quick-responses`);
+    }
+
+    async createQuickResponse(widgetId: number, data: any): Promise<{ data: any }> {
+        return this.post<any>(`/widgets/${widgetId}/quick-responses`, data);
+    }
+
+    async updateQuickResponse(widgetId: number, responseId: number, data: any): Promise<{ data: any }> {
+        return this.put<any>(`/widgets/${widgetId}/quick-responses/${responseId}`, data);
+    }
+
+    async deleteQuickResponse(widgetId: number, responseId: number): Promise<{ data: any }> {
+        return this.delete<any>(`/widgets/${widgetId}/quick-responses/${responseId}`);
+    }
+
+    async getConversationStarters(widgetId: number): Promise<{ data: any }> {
+        return this.get<any>(`/widgets/${widgetId}/conversation-starters`);
+    }
+
+    async createConversationStarter(widgetId: number, data: any): Promise<{ data: any }> {
+        return this.post<any>(`/widgets/${widgetId}/conversation-starters`, data);
+    }
+
+    async updateConversationStarter(widgetId: number, starterId: number, data: any): Promise<{ data: any }> {
+        return this.put<any>(`/widgets/${widgetId}/conversation-starters/${starterId}`, data);
+    }
+
+    async deleteConversationStarter(widgetId: number, starterId: number): Promise<{ data: any }> {
+        return this.delete<any>(`/widgets/${widgetId}/conversation-starters/${starterId}`);
+    }
+
+    /**
+     * Widget Chat
+     */
+    async getConversations(widgetId: number, params?: any): Promise<{ data: any }> {
+        const queryParams = new URLSearchParams(params);
+        const query = queryParams.toString();
+        return this.get<any>(`/widgets/${widgetId}/conversations${query ? `?${query}` : ''}`);
+    }
+
+    async createConversation(widgetId: number, data: any): Promise<{ data: any }> {
+        return this.post<any>(`/widgets/${widgetId}/conversations`, data);
+    }
+
+    async getConversationMessages(widgetId: number, conversationId: string): Promise<{ data: any }> {
+        return this.get<any>(`/widgets/${widgetId}/conversations/${conversationId}/messages`);
+    }
+
+    async sendMessage(widgetId: number, conversationId: string, data: any): Promise<{ data: any }> {
+        return this.post<any>(`/widgets/${widgetId}/conversations/${conversationId}/messages`, data);
     }
 }
 

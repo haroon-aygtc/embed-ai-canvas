@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { authApi, User } from "@/services/auth";
+import { apiClient } from "@/services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -91,6 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error("Failed to refresh user:", error);
       // If refresh fails, clear auth
       authApi.clearAuth();
+      apiClient.clearAuth();
       setUser(null);
     }
   };

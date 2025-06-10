@@ -4460,38 +4460,38 @@ class WidgetConfigurationService
 }
 ```
 
-### 31.8 Request Classes for Validation 🔄 NEED TO CREATE
+### 31.8 Request Classes for Validation ✅ CREATED
 
 #### Widget Request Classes
-- [ ] `app/Http/Requests/Widget/StoreWidgetRequest.php`
-- [ ] `app/Http/Requests/Widget/UpdateWidgetRequest.php`
-- [ ] `app/Http/Requests/Widget/DuplicateWidgetRequest.php`
+- [x] `app/Http/Requests/Widget/StoreWidgetRequest.php`
+- [x] `app/Http/Requests/Widget/UpdateWidgetRequest.php`
+- [x] `app/Http/Requests/Widget/DuplicateWidgetRequest.php`
 
 #### Configuration Request Classes
-- [ ] `app/Http/Requests/WidgetConfiguration/StoreConfigurationRequest.php`
-- [ ] `app/Http/Requests/WidgetConfiguration/UpdateConfigurationRequest.php`
-- [ ] `app/Http/Requests/WidgetConfiguration/RollbackConfigurationRequest.php`
+- [x] `app/Http/Requests/WidgetConfiguration/StoreConfigurationRequest.php`
+- [x] `app/Http/Requests/WidgetConfiguration/UpdateConfigurationRequest.php`
+- [x] `app/Http/Requests/WidgetConfiguration/RollbackConfigurationRequest.php`
 
 #### Content Request Classes
-- [ ] `app/Http/Requests/WidgetContent/StoreQuickResponseRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/UpdateQuickResponseRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/BulkUpdateQuickResponsesRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/StoreConversationStarterRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/UpdateConversationStarterRequest.php`
+- [x] `app/Http/Requests/WidgetContent/StoreQuickResponseRequest.php`
+- [x] `app/Http/Requests/WidgetContent/UpdateQuickResponseRequest.php`
+- [x] `app/Http/Requests/WidgetContent/BulkUpdateQuickResponsesRequest.php`
+- [x] `app/Http/Requests/WidgetContent/StoreConversationStarterRequest.php`
+- [x] `app/Http/Requests/WidgetContent/UpdateConversationStarterRequest.php`
 
 #### Behavior Request Classes
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateBehaviorSettingsRequest.php`
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateOperatingHoursRequest.php`
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateTriggersRequest.php`
+- [x]  `app/Http/Requests/WidgetBehavior/UpdateBehaviorSettingsRequest.php`
+- [x]  `app/Http/Requests/WidgetBehavior/UpdateOperatingHoursRequest.php`
+- [x]  `app/Http/Requests/WidgetBehavior/UpdateTriggersRequest.php`
 
 #### Template Request Classes
-- [ ] `app/Http/Requests/WidgetTemplate/StoreTemplateRequest.php`
-- [ ] `app/Http/Requests/WidgetTemplate/UpdateTemplateRequest.php`
-- [ ] `app/Http/Requests/WidgetTemplate/ApplyTemplateRequest.php`
+- [x]  `app/Http/Requests/WidgetTemplate/StoreTemplateRequest.php`
+- [x]  `app/Http/Requests/WidgetTemplate/UpdateTemplateRequest.php`
+- [x]  `app/Http/Requests/WidgetTemplate/ApplyTemplateRequest.php`
 
 #### Chat Request Classes
-- [ ] `app/Http/Requests/WidgetChat/SendMessageRequest.php`
-- [ ] `app/Http/Requests/WidgetChat/TestChatRequest.php`
+- [x]  `app/Http/Requests/WidgetChat/SendMessageRequest.php`
+- [x] `app/Http/Requests/WidgetChat/TestChatRequest.php`
 
 ### 31.9 API Routes Structure 🔄 NEXT PHASE
 
@@ -4672,11 +4672,11 @@ getTestConversations(widgetId: number): Promise<TestConversation[]>
 - [ ] Add caching with React Query
 
 #### New Hooks
-- [ ] `src/hooks/useWidgetTemplates.ts`
-- [ ] `src/hooks/useWidgetConfiguration.ts`
-- [ ] `src/hooks/useWidgetContent.ts`
-- [ ] `src/hooks/useWidgetAnalytics.ts`
-- [ ] `src/hooks/useWidgetChat.ts`
+- [x] `src/hooks/useWidgetTemplates.ts`
+- [x] `src/hooks/useWidgetConfiguration.ts`
+- [x] `src/hooks/useWidgetContent.ts`
+- [x] `src/hooks/useWidgetAnalytics.ts`
+- [x] `src/hooks/useWidgetChat.ts`
 
 ### 32.3 State Management Enhancement
 
@@ -4750,38 +4750,6 @@ class WidgetConfigurationService
 }
 ```
 
-### 33.8 Request Classes for Validation 🔄 NEED TO CREATE
-
-#### Widget Request Classes
-- [ ] `app/Http/Requests/Widget/StoreWidgetRequest.php`
-- [ ] `app/Http/Requests/Widget/UpdateWidgetRequest.php`
-- [ ] `app/Http/Requests/Widget/DuplicateWidgetRequest.php`
-
-#### Configuration Request Classes
-- [ ] `app/Http/Requests/WidgetConfiguration/StoreConfigurationRequest.php`
-- [ ] `app/Http/Requests/WidgetConfiguration/UpdateConfigurationRequest.php`
-- [ ] `app/Http/Requests/WidgetConfiguration/RollbackConfigurationRequest.php`
-
-#### Content Request Classes
-- [ ] `app/Http/Requests/WidgetContent/StoreQuickResponseRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/UpdateQuickResponseRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/BulkUpdateQuickResponsesRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/StoreConversationStarterRequest.php`
-- [ ] `app/Http/Requests/WidgetContent/UpdateConversationStarterRequest.php`
-
-#### Behavior Request Classes
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateBehaviorSettingsRequest.php`
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateOperatingHoursRequest.php`
-- [ ] `app/Http/Requests/WidgetBehavior/UpdateTriggersRequest.php`
-
-#### Template Request Classes
-- [ ] `app/Http/Requests/WidgetTemplate/StoreTemplateRequest.php`
-- [ ] `app/Http/Requests/WidgetTemplate/UpdateTemplateRequest.php`
-- [ ] `app/Http/Requests/WidgetTemplate/ApplyTemplateRequest.php`
-
-#### Chat Request Classes
-- [ ] `app/Http/Requests/WidgetChat/SendMessageRequest.php`
-- [ ] `app/Http/Requests/WidgetChat/TestChatRequest.php`
 
 ### 33.9 API Routes Structure 🔄 NEXT PHASE
 

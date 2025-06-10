@@ -1,108 +1,53 @@
-
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
-import { WidgetConfig } from './WidgetConfiguration';
-
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  preview: string;
-  config: WidgetConfig;
-  popular?: boolean;
-}
+import React, { useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, Loader2 } from "lucide-react";
+import { WidgetConfig } from "./WidgetConfiguration";
+import { useWidgetTemplates } from "@/hooks/useWidgetTemplates";
 
 interface WidgetTemplatesProps {
   onSelectTemplate: (config: WidgetConfig) => void;
   currentConfig: WidgetConfig;
 }
 
-const templates: Template[] = [
-  {
-    id: 'modern-support',
-    name: 'Modern Support',
-    description: 'Clean, minimalist design perfect for SaaS platforms',
-    category: 'Support',
-    preview: 'modern',
-    popular: true,
-    config: {
-      theme: 'light',
-      primaryColor: '#3b82f6',
-      position: 'bottom-right',
-      size: 'medium',
-      welcomeMessage: 'Hi! How can we help you today?',
-      placeholder: 'Type your question...',
-      title: 'Support Assistant',
-      subtitle: 'We\'re here to help',
-      enabled: true,
-      showBranding: false,
-    }
-  },
-  {
-    id: 'sales-assistant',
-    name: 'Sales Assistant',
-    description: 'Engaging design to capture leads and drive conversions',
-    category: 'Sales',
-    preview: 'sales',
-    config: {
-      theme: 'light',
-      primaryColor: '#10b981',
-      position: 'bottom-right',
-      size: 'large',
-      welcomeMessage: 'Ready to see how we can help your business grow?',
-      placeholder: 'Tell us about your needs...',
-      title: 'Sales Assistant',
-      subtitle: 'Let\'s discuss your requirements',
-      enabled: true,
-      showBranding: false,
-    }
-  },
-  {
-    id: 'dark-tech',
-    name: 'Dark Tech',
-    description: 'Sleek dark theme ideal for developer tools and tech products',
-    category: 'Developer',
-    preview: 'dark',
-    popular: true,
-    config: {
-      theme: 'dark',
-      primaryColor: '#8b5cf6',
-      position: 'bottom-left',
-      size: 'medium',
-      welcomeMessage: 'Need help with integration or have technical questions?',
-      placeholder: 'Describe your issue...',
-      title: 'Developer Support',
-      subtitle: 'Technical assistance available 24/7',
-      enabled: true,
-      showBranding: false,
-    }
-  },
-  {
-    id: 'friendly-ecommerce',
-    name: 'Friendly E-commerce',
-    description: 'Warm, approachable design for online stores',
-    category: 'E-commerce',
-    preview: 'ecommerce',
-    config: {
-      theme: 'light',
-      primaryColor: '#f59e0b',
-      position: 'bottom-right',
-      size: 'medium',
-      welcomeMessage: 'Looking for something specific? I\'m here to help!',
-      placeholder: 'What are you looking for?',
-      title: 'Shopping Assistant',
-      subtitle: 'Find what you need faster',
-      enabled: true,
-      showBranding: false,
-    }
-  }
-];
+export const WidgetTemplates = ({
+  onSelectTemplate,
+  currentConfig,
+}: WidgetTemplatesProps) => {
+  // Use real API data instead of hardcoded templates
+  const {
+    templates,
+    isLoading,
+    error,
+    loadTemplates,
+  } = useWidgetTemplates();
 
-export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTemplatesProps) => {
+  // Load templates on mount
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Loading templates...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">Failed to load templates: {error}</p>
+        <Button onClick={loadTemplates} variant="outline">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -114,7 +59,7 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
 
       {/* Grid Layout for All Templates */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {templates.map(template => (
+        {templates.map((template) => (
           <Card
             key={template.id}
             className="relative cursor-pointer hover:shadow-md transition-all hover:scale-105 group"
@@ -126,7 +71,9 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
                 <div className="flex items-center gap-2">
                   <h5 className="font-semibold text-sm">{template.name}</h5>
                   {template.popular && (
-                    <Badge variant="secondary" className="text-xs">Popular</Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      Popular
+                    </Badge>
                   )}
                 </div>
                 <div
@@ -156,15 +103,21 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
               <div className="space-y-2 mb-4">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Theme:</span>
-                  <span className="font-medium">{template.config.theme === 'dark' ? 'Dark' : 'Light'}</span>
+                  <span className="font-medium">
+                    {template.config.theme === "dark" ? "Dark" : "Light"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Size:</span>
-                  <span className="font-medium capitalize">{template.config.size}</span>
+                  <span className="font-medium capitalize">
+                    {template.config.size}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Position:</span>
-                  <span className="font-medium">{template.config.position.replace('-', ' ')}</span>
+                  <span className="font-medium">
+                    {template.config.position.replace("-", " ")}
+                  </span>
                 </div>
               </div>
 
@@ -187,32 +140,36 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
         <div className="flex items-center justify-between">
           <div>
             <h4 className="font-medium mb-1">Need something custom?</h4>
-            <p className="text-sm text-muted-foreground">Start with a blank template and customize everything</p>
+            <p className="text-sm text-muted-foreground">
+              Start with a blank template and customize everything
+            </p>
           </div>
           <Button
             variant="outline"
-            onClick={() => onSelectTemplate({
-              theme: 'light',
-              primaryColor: '#3b82f6',
-              position: 'bottom-right',
-              size: 'medium',
-              welcomeMessage: 'Hello! How can I help you today?',
-              placeholder: 'Type your message...',
-              title: 'AI Assistant',
-              subtitle: 'Powered by ChatWidget Pro',
-              enabled: true,
-              showBranding: true,
-              knowledgeBase: {
-                selectedKnowledgeBases: [],
-                sources: [],
-                settings: {
-                  autoLearning: true,
-                  contextAwareness: true,
-                  realTimeUpdates: false,
-                  confidenceThreshold: true
-                }
-              }
-            })}
+            onClick={() =>
+              onSelectTemplate({
+                theme: "light",
+                primaryColor: "#3b82f6",
+                position: "bottom-right",
+                size: "medium",
+                welcomeMessage: "Hello! How can I help you today?",
+                placeholder: "Type your message...",
+                title: "AI Assistant",
+                subtitle: "Powered by ChatWidget Pro",
+                enabled: true,
+                showBranding: true,
+                knowledgeBase: {
+                  selectedKnowledgeBases: [],
+                  sources: [],
+                  settings: {
+                    autoLearning: true,
+                    contextAwareness: true,
+                    realTimeUpdates: false,
+                    confidenceThreshold: true,
+                  },
+                },
+              })
+            }
           >
             Start Blank
           </Button>
