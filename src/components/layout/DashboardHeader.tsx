@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Bell, User, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { HelpCenter } from '@/components/ui/HelpSystem';
 
 export const DashboardHeader = () => {
   return (
@@ -17,8 +17,9 @@ export const DashboardHeader = () => {
           />
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-3">
+        <HelpCenter />
         <ThemeToggle />
         <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5" />

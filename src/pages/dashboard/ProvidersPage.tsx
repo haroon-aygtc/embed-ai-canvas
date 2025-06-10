@@ -1,277 +1,1293 @@
-
-import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input, SearchInput, PasswordInput } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Bot, Settings, TestTube, Check, X, Eye, EyeOff } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/combobox';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Plus, Bot, Settings, TestTube, Check, X, Eye, EyeOff, Loader2,
+  Brain, Zap, Shield, BarChart3, Globe, Clock, AlertTriangle,
+  Cpu, Database, Network, Key, Monitor, Activity, Download,
+  Upload, Copy, Edit, Trash2, RefreshCw, Play, Pause, CheckCircle,
+  Target, ArrowDown, ArrowUp, Sparkles, Search, Filter, Grid3X3,
+  List, Layers, Star, Save, Power, MoreHorizontal, ChevronDown,
+  ChevronRight, Info, AlertCircle, Wifi, WifiOff
+} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSetupWizard } from '@/hooks/useSetupWizard';
+import { SetupWizard } from '@/components/onboarding/SetupWizard';
+
+// Enhanced Provider State Management
+type ProviderStatus =
+  | 'unconfigured'    // No API key entered
+  | 'configuring'     // API key entered, not tested
+  | 'testing'         // Connection test in progress
+  | 'test-failed'     // Test failed, need to retry
+  | 'test-passed'     // Test passed, ready to save
+  | 'saving'          // Save operation in progress
+  | 'configured'      // Provider saved, ready to fetch models
+  | 'fetching-models' // Fetching models from API
+  | 'ready'           // Models fetched and available
+  | 'error';          // General error state
 
 interface Provider {
   id: string;
   name: string;
-  status: 'connected' | 'disconnected' | 'error';
+  icon: string;
+  description: string;
+  status: ProviderStatus;
   apiKey?: string;
   baseUrl?: string;
-  models?: string[];
+  region?: string;
   lastTested?: string;
+  lastSaved?: string;
+  testResult?: {
+    success: boolean;
+    message: string;
+    latency?: number;
+    timestamp: string;
+  };
+  pricing?: {
+    inputCost: string;
+    outputCost: string;
+    currency: string;
+  };
+  features?: string[];
+  limits?: {
+    rateLimit: string;
+    contextWindow: string;
+    maxTokens: string;
+  };
+  latency?: number;
+  uptime?: number;
+  totalRequests?: number;
+  errorRate?: number;
+  modelCount?: number;
+  savedModels?: string[]; // IDs of models user has saved
 }
+
+interface ProviderModel {
+  id: string;
+  name: string;
+  description: string;
+  family: string; // e.g., "gpt-4", "claude-3", "llama-3"
+  contextWindow: number;
+  maxTokens: number;
+  inputCost: number;
+  outputCost: number;
+  capabilities: string[];
+  isDeprecated: boolean;
+  releaseDate?: string;
+  // User preferences
+  isSaved: boolean;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+type ModelViewType = 'grid' | 'table' | 'family';
 
 const mockProviders: Provider[] = [
   {
     id: 'openai',
     name: 'OpenAI',
-    status: 'connected',
-    apiKey: 'sk-***...***abc',
-    models: ['gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo'],
-    lastTested: '2024-01-15 14:30'
+    icon: '🤖',
+    description: 'Industry-leading AI models with exceptional performance',
+    status: 'unconfigured',
+    baseUrl: 'https://api.openai.com/v1',
+    pricing: { inputCost: '$0.03', outputCost: '$0.06', currency: 'USD' },
+    features: ['Function Calling', 'Vision', 'Code Interpreter', 'JSON Mode'],
+    limits: { rateLimit: '10,000 RPM', contextWindow: '128K', maxTokens: '4,096' },
   },
   {
     id: 'anthropic',
     name: 'Anthropic',
-    status: 'connected',
+    icon: '🧠',
+    description: 'Constitutional AI with strong safety and reasoning',
+    status: 'configured',
     apiKey: 'sk-ant-***...***xyz',
-    models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
-    lastTested: '2024-01-15 14:25'
-  },
-  {
-    id: 'openrouter',
-    name: 'OpenRouter',
-    status: 'disconnected',
-    models: []
+    baseUrl: 'https://api.anthropic.com',
+    region: 'US-West',
+    lastTested: '2024-01-15 14:25',
+    lastSaved: '2024-01-15 14:30',
+    testResult: {
+      success: true,
+      message: 'Connection successful',
+      latency: 920,
+      timestamp: '2024-01-15 14:25'
+    },
+    pricing: { inputCost: '$0.015', outputCost: '$0.075', currency: 'USD' },
+    features: ['Constitutional AI', 'Long Context', 'Safety Focused', 'Reasoning'],
+    limits: { rateLimit: '5,000 RPM', contextWindow: '200K', maxTokens: '4,096' },
+    latency: 920,
+    uptime: 99.8,
+    totalRequests: 8750,
+    errorRate: 0.2,
+    modelCount: 3,
+    savedModels: ['claude-3-opus', 'claude-3-sonnet']
   },
   {
     id: 'groq',
     name: 'Groq',
-    status: 'error',
+    icon: '⚡',
+    description: 'Ultra-fast inference with specialized hardware',
+    status: 'test-failed',
     apiKey: 'gsk-***...***def',
-    lastTested: '2024-01-15 14:20'
+    baseUrl: 'https://api.groq.com/openai/v1',
+    region: 'Global',
+    lastTested: '2024-01-15 14:20',
+    testResult: {
+      success: false,
+      message: 'Invalid API key or insufficient permissions',
+      timestamp: '2024-01-15 14:20'
+    },
+    pricing: { inputCost: '$0.0008', outputCost: '$0.0008', currency: 'USD' },
+    features: ['Ultra-Fast', 'Low Latency', 'Open Source Models', 'Cost Effective'],
+    limits: { rateLimit: '30,000 RPM', contextWindow: '32K', maxTokens: '8,192' },
   }
 ];
 
+// Mock API service for fetching models
+const fetchProviderModels = async (providerId: string): Promise<ProviderModel[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // Mock different model sets for different providers
+  const modelSets: Record<string, ProviderModel[]> = {
+    openai: [
+      {
+        id: 'gpt-4',
+        name: 'GPT-4',
+        description: 'Most capable model for complex reasoning and analysis',
+        family: 'gpt-4',
+        contextWindow: 128000,
+        maxTokens: 4096,
+        inputCost: 0.03,
+        outputCost: 0.06,
+        capabilities: ['Text', 'Code', 'Analysis', 'Reasoning'],
+        isDeprecated: false,
+        releaseDate: '2023-03-14',
+        isSaved: false,
+        isActive: false,
+        isDefault: false
+      },
+      {
+        id: 'gpt-4-turbo',
+        name: 'GPT-4 Turbo',
+        description: 'Faster and more cost-effective version',
+        family: 'gpt-4',
+        contextWindow: 128000,
+        maxTokens: 4096,
+        inputCost: 0.01,
+        outputCost: 0.03,
+        capabilities: ['Text', 'Code', 'Vision', 'JSON'],
+        isDeprecated: false,
+        releaseDate: '2023-11-06',
+        isSaved: false,
+        isActive: false,
+        isDefault: false
+      },
+      // Add more models to simulate large dataset
+      ...Array.from({ length: 20 }, (_, i) => ({
+        id: `gpt-3.5-turbo-${i}`,
+        name: `GPT-3.5 Turbo ${i}`,
+        description: `Fast and efficient model variant ${i}`,
+        family: 'gpt-3.5',
+        contextWindow: 16000,
+        maxTokens: 4096,
+        inputCost: 0.002,
+        outputCost: 0.002,
+        capabilities: ['Text', 'Code'],
+        isDeprecated: i > 15,
+        releaseDate: '2023-06-13',
+        isSaved: false,
+        isActive: false,
+        isDefault: false
+      }))
+    ],
+    anthropic: [
+      {
+        id: 'claude-3-opus',
+        name: 'Claude 3 Opus',
+        description: 'Most intelligent model for complex reasoning',
+        family: 'claude-3',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 0.015,
+        outputCost: 0.075,
+        capabilities: ['Text', 'Analysis', 'Reasoning', 'Math'],
+        isDeprecated: false,
+        releaseDate: '2024-02-29',
+        isSaved: true,
+        isActive: true,
+        isDefault: true
+      },
+      {
+        id: 'claude-3-sonnet',
+        name: 'Claude 3 Sonnet',
+        description: 'Balanced performance and cost',
+        family: 'claude-3',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 0.003,
+        outputCost: 0.015,
+        capabilities: ['Text', 'Analysis', 'Code'],
+        isDeprecated: false,
+        releaseDate: '2024-02-29',
+        isSaved: true,
+        isActive: true,
+        isDefault: false
+      },
+      {
+        id: 'claude-3-haiku',
+        name: 'Claude 3 Haiku',
+        description: 'Fast and affordable for simple tasks',
+        family: 'claude-3',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 0.00025,
+        outputCost: 0.00125,
+        capabilities: ['Text', 'Speed'],
+        isDeprecated: false,
+        releaseDate: '2024-02-29',
+        isSaved: false,
+        isActive: false,
+        isDefault: false
+      }
+    ]
+  };
+
+  return modelSets[providerId] || [];
+};
+
 const ProvidersPage = () => {
+  const { showWizard, handleWizardComplete, handleWizardSkip, handleStartWizard } = useSetupWizard();
   const [providers, setProviders] = useState<Provider[]>(mockProviders);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [testMessage, setTestMessage] = useState('Hello, can you help me test this connection?');
-  const [testResult, setTestResult] = useState<string | null>(null);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isSavingProvider, setIsSavingProvider] = useState(false);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [providerModels, setProviderModels] = useState<ProviderModel[]>([]);
 
-  const getStatusColor = (status: string) => {
+  // Model management state
+  const [modelViewType, setModelViewType] = useState<ModelViewType>('grid');
+  const [modelSearchTerm, setModelSearchTerm] = useState('');
+  const [selectedModelFamily, setSelectedModelFamily] = useState<string>('all');
+  const [showDeprecated, setShowDeprecated] = useState(false);
+  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+
+  // Form state
+  const [formData, setFormData] = useState({
+    apiKey: '',
+    baseUrl: '',
+    region: 'us-east'
+  });
+
+  const getStatusColor = (status: ProviderStatus) => {
     switch (status) {
-      case 'connected': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'ready': return 'text-green-600';
+      case 'configured': return 'text-blue-600';
+      case 'test-passed': return 'text-green-600';
+      case 'testing': case 'saving': case 'fetching-models': return 'text-yellow-600';
+      case 'test-failed': case 'error': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status: ProviderStatus) => {
+    switch (status) {
+      case 'ready': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'configured': return <Wifi className="h-4 w-4 text-blue-600" />;
+      case 'test-passed': return <Check className="h-4 w-4 text-green-600" />;
+      case 'testing': case 'saving': case 'fetching-models': return <Loader2 className="h-4 w-4 text-yellow-600 animate-spin" />;
+      case 'test-failed': case 'error': return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'unconfigured': return <WifiOff className="h-4 w-4 text-gray-400" />;
+      default: return <Clock className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusText = (status: ProviderStatus) => {
+    switch (status) {
+      case 'unconfigured': return 'Not Configured';
+      case 'configuring': return 'Configuring';
+      case 'testing': return 'Testing Connection';
+      case 'test-failed': return 'Test Failed';
+      case 'test-passed': return 'Test Passed';
+      case 'saving': return 'Saving';
+      case 'configured': return 'Configured';
+      case 'fetching-models': return 'Fetching Models';
+      case 'ready': return 'Ready';
+      case 'error': return 'Error';
+      default: return 'Unknown';
     }
   };
 
   const handleTestConnection = async (providerId: string) => {
+    if (!selectedProvider || !formData.apiKey.trim()) return;
+
     setIsTestingConnection(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTestResult('Connection successful! Provider is responding correctly.');
+
+    // Update provider status to testing
+    setProviders(prev => prev.map(p =>
+      p.id === providerId ? { ...p, status: 'testing' } : p
+    ));
+
+    try {
+      // Simulate API test
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Simulate success/failure based on API key format
+      const isValidKey = formData.apiKey.startsWith('sk-') || formData.apiKey.startsWith('sk-ant-') || formData.apiKey.startsWith('gsk-');
+
+      const testResult = {
+        success: isValidKey,
+        message: isValidKey ? 'Connection successful! API key is valid.' : 'Invalid API key format or insufficient permissions.',
+        latency: isValidKey ? Math.floor(Math.random() * 1000) + 500 : undefined,
+        timestamp: new Date().toISOString()
+      };
+
+      setProviders(prev => prev.map(p =>
+        p.id === providerId ? {
+          ...p,
+          status: isValidKey ? 'test-passed' : 'test-failed',
+          testResult,
+          lastTested: new Date().toLocaleString(),
+          apiKey: formData.apiKey,
+          baseUrl: formData.baseUrl,
+          region: formData.region
+        } : p
+      ));
+
+      // Update selected provider
+      if (selectedProvider.id === providerId) {
+        setSelectedProvider(prev => prev ? {
+          ...prev,
+          status: isValidKey ? 'test-passed' : 'test-failed',
+          testResult,
+          lastTested: new Date().toLocaleString(),
+          apiKey: formData.apiKey,
+          baseUrl: formData.baseUrl,
+          region: formData.region
+        } : null);
+      }
+
+    } catch (error) {
+      const testResult = {
+        success: false,
+        message: 'Connection failed. Please check your network and try again.',
+        timestamp: new Date().toISOString()
+      };
+
+      setProviders(prev => prev.map(p =>
+        p.id === providerId ? {
+          ...p,
+          status: 'test-failed',
+          testResult
+        } : p
+      ));
+    } finally {
       setIsTestingConnection(false);
-    }, 2000);
+    }
   };
 
-  const handleTestMessage = async () => {
-    setIsTestingConnection(true);
-    // Simulate API call
-    setTimeout(() => {
-      setTestResult('Test message sent successfully. Response: "Hello! I can help you test this connection. The integration is working perfectly."');
-      setIsTestingConnection(false);
-    }, 3000);
+  const handleSaveProvider = async (providerId: string) => {
+    if (!selectedProvider || selectedProvider.status !== 'test-passed') return;
+
+    setIsSavingProvider(true);
+
+    // Update provider status to saving
+    setProviders(prev => prev.map(p =>
+      p.id === providerId ? { ...p, status: 'saving' } : p
+    ));
+
+    try {
+      // Simulate save operation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      setProviders(prev => prev.map(p =>
+        p.id === providerId ? {
+          ...p,
+          status: 'configured',
+          lastSaved: new Date().toLocaleString()
+        } : p
+      ));
+
+      // Update selected provider
+      if (selectedProvider.id === providerId) {
+        const updatedProvider = {
+          ...selectedProvider,
+          status: 'configured' as ProviderStatus,
+          lastSaved: new Date().toLocaleString()
+        };
+        setSelectedProvider(updatedProvider);
+
+        // Automatically fetch models after successful save
+        await fetchModels(updatedProvider);
+      }
+
+    } catch (error) {
+      setProviders(prev => prev.map(p =>
+        p.id === providerId ? { ...p, status: 'error' } : p
+      ));
+    } finally {
+      setIsSavingProvider(false);
+    }
   };
+
+  const fetchModels = async (provider: Provider) => {
+    if (provider.status !== 'configured' && provider.status !== 'ready') return;
+
+    setIsFetchingModels(true);
+
+    // Update provider status to fetching models
+    setProviders(prev => prev.map(p =>
+      p.id === provider.id ? { ...p, status: 'fetching-models' } : p
+    ));
+
+    try {
+      const models = await fetchProviderModels(provider.id);
+      setProviderModels(models);
+
+      setProviders(prev => prev.map(p =>
+        p.id === provider.id ? {
+          ...p,
+          status: 'ready',
+          modelCount: models.length
+        } : p
+      ));
+
+      // Update selected provider
+      if (selectedProvider?.id === provider.id) {
+        setSelectedProvider(prev => prev ? {
+          ...prev,
+          status: 'ready',
+          modelCount: models.length
+        } : null);
+      }
+
+    } catch (error) {
+      setProviders(prev => prev.map(p =>
+        p.id === provider.id ? { ...p, status: 'error' } : p
+      ));
+    } finally {
+      setIsFetchingModels(false);
+    }
+  };
+
+  // Initialize form data when provider is selected
+  useEffect(() => {
+    if (selectedProvider) {
+      setFormData({
+        apiKey: selectedProvider.apiKey || '',
+        baseUrl: selectedProvider.baseUrl || '',
+        region: selectedProvider.region || 'us-east'
+      });
+
+      // If provider is ready, fetch models
+      if (selectedProvider.status === 'ready' && providerModels.length === 0) {
+        fetchModels(selectedProvider);
+      }
+    }
+  }, [selectedProvider]);
+
+  // Determine which tabs should be visible
+  const shouldShowModelsTab = selectedProvider && ['configured', 'fetching-models', 'ready'].includes(selectedProvider.status);
+  const shouldShowTestTab = selectedProvider && ['configured', 'ready'].includes(selectedProvider.status);
+  const shouldShowAnalyticsTab = selectedProvider && selectedProvider.status === 'ready';
+
+  // Filter and search models
+  const filteredModels = providerModels.filter(model => {
+    const matchesSearch = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+      model.description.toLowerCase().includes(modelSearchTerm.toLowerCase()) ||
+      model.capabilities.some(cap => cap.toLowerCase().includes(modelSearchTerm.toLowerCase()));
+
+    const matchesFamily = selectedModelFamily === 'all' || model.family === selectedModelFamily;
+    const matchesDeprecated = showDeprecated || !model.isDeprecated;
+
+    return matchesSearch && matchesFamily && matchesDeprecated;
+  });
+
+  // Get unique model families for filtering
+  const modelFamilies = Array.from(new Set(providerModels.map(model => model.family)));
+
+  const handleModelToggle = (modelId: string, field: 'isSaved' | 'isActive' | 'isDefault') => {
+    setProviderModels(prev => prev.map(model => {
+      if (model.id === modelId) {
+        const updated = { ...model, [field]: !model[field] };
+
+        // If setting as default, unset other defaults
+        if (field === 'isDefault' && updated.isDefault) {
+          return updated;
+        }
+        return updated;
+      } else if (field === 'isDefault') {
+        // Unset other defaults when setting a new default
+        return { ...model, isDefault: false };
+      }
+      return model;
+    }));
+  };
+
+  const handleBulkAction = (action: 'save' | 'activate' | 'deactivate', modelIds: string[]) => {
+    setProviderModels(prev => prev.map(model => {
+      if (modelIds.includes(model.id)) {
+        switch (action) {
+          case 'save':
+            return { ...model, isSaved: true };
+          case 'activate':
+            return { ...model, isActive: true, isSaved: true }; // Auto-save when activating
+          case 'deactivate':
+            return { ...model, isActive: false };
+          default:
+            return model;
+        }
+      }
+      return model;
+    }));
+    setSelectedModels(new Set());
+  };
+
+  if (showWizard) {
+    return <SetupWizard onComplete={handleWizardComplete} onSkip={handleWizardSkip} />;
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">AI Providers</h1>
-            <p className="text-muted-foreground">Manage your AI provider configurations and test connections</p>
-          </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Provider
-          </Button>
-        </div>
+        <PageHeader
+          title="AI Providers"
+          description="Configure and manage your AI provider connections"
+          actions={
+            <Button onClick={handleStartWizard} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Setup Wizard
+            </Button>
+          }
+        />
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Providers</CardTitle>
-                <CardDescription>Configure your AI providers</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Provider List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Network className="h-5 w-5" />
+                Providers
+              </CardTitle>
+              <CardDescription>
+                Select a provider to configure
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-[600px] overflow-y-auto p-6 space-y-3">
                 {providers.map((provider) => (
                   <div
                     key={provider.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedProvider?.id === provider.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                    }`}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all hover:scale-[1.02] focus:outline-none ${selectedProvider?.id === provider.id
+                        ? 'border-primary bg-primary/5 shadow-md'
+                        : 'hover:bg-muted/50'
+                      }`}
                     onClick={() => setSelectedProvider(provider)}
+                    tabIndex={-1}
+                    role="button"
+                    aria-label={`Select ${provider.name} provider`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
-                        <Bot className="h-5 w-5" />
+                        <span className="text-2xl">{provider.icon}</span>
                         <div>
                           <div className="font-medium">{provider.name}</div>
-                          {provider.models && (
-                            <div className="text-xs text-muted-foreground">
-                              {provider.models.length} models
-                            </div>
-                          )}
+                          <div className="text-xs text-muted-foreground">{provider.description}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(provider.status)}`} />
-                        <Badge variant={provider.status === 'connected' ? 'default' : 'secondary'}>
-                          {provider.status}
-                        </Badge>
+                        {getStatusIcon(provider.status)}
                       </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <span className={getStatusColor(provider.status)}>
+                        {getStatusText(provider.status)}
+                      </span>
+                      {provider.modelCount && (
+                        <span className="text-muted-foreground">
+                          {provider.modelCount} models
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="xl:col-span-2">
-            {selectedProvider ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Bot className="h-5 w-5" />
-                    <span>{selectedProvider.name} Configuration</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Configure and test your {selectedProvider.name} integration
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="config" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="config" className="flex items-center gap-2">
-                        <Settings className="h-4 w-4" />
-                        Configuration
+          {/* Provider Configuration */}
+          {selectedProvider && (
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{selectedProvider.icon}</span>
+                    <div>
+                      <CardTitle>{selectedProvider.name}</CardTitle>
+                      <CardDescription>{selectedProvider.description}</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={selectedProvider.status === 'ready' ? 'default' : 'secondary'}>
+                      {getStatusText(selectedProvider.status)}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="config" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+                    <TabsTrigger value="config" className="flex items-center gap-1">
+                      <Settings className="h-3 w-3" />
+                      Config
+                    </TabsTrigger>
+                    {shouldShowModelsTab && (
+                      <TabsTrigger value="models" className="flex items-center gap-1">
+                        <Brain className="h-3 w-3" />
+                        Models
+                        {selectedProvider.modelCount && (
+                          <Badge variant="secondary" className="ml-1 text-xs">
+                            {selectedProvider.modelCount}
+                          </Badge>
+                        )}
                       </TabsTrigger>
-                      <TabsTrigger value="test" className="flex items-center gap-2">
-                        <TestTube className="h-4 w-4" />
+                    )}
+                    {shouldShowTestTab && (
+                      <TabsTrigger value="test" className="flex items-center gap-1">
+                        <TestTube className="h-3 w-3" />
                         Testing
                       </TabsTrigger>
-                    </TabsList>
+                    )}
+                    {shouldShowAnalyticsTab && (
+                      <TabsTrigger value="analytics" className="flex items-center gap-1">
+                        <BarChart3 className="h-3 w-3" />
+                        Analytics
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
 
-                    <TabsContent value="config" className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="apiKey">API Key</Label>
-                        <div className="flex space-x-2">
-                          <Input
-                            id="apiKey"
-                            type={showApiKey ? 'text' : 'password'}
-                            value={selectedProvider.apiKey || ''}
-                            placeholder="Enter your API key"
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setShowApiKey(!showApiKey)}
-                          >
-                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
+                  {/* Configuration Tab */}
+                  <TabsContent value="config" className="border rounded-lg p-6 bg-card space-y-6 mt-4">
+                    <div className="space-y-6">
+                      {/* Connection Status */}
+                      {selectedProvider.testResult && (
+                        <div className={`p-4 rounded-lg border ${selectedProvider.testResult.success
+                            ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800'
+                            : 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+                          }`}>
+                          <div className="flex items-start space-x-3">
+                            {selectedProvider.testResult.success ? (
+                              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                            ) : (
+                              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                            )}
+                            <div className="flex-1">
+                              <p className={`text-sm font-medium ${selectedProvider.testResult.success
+                                  ? 'text-green-900 dark:text-green-100'
+                                  : 'text-red-900 dark:text-red-100'
+                                }`}>
+                                {selectedProvider.testResult.success ? 'Connection Successful' : 'Connection Failed'}
+                              </p>
+                              <p className={`text-xs mt-1 ${selectedProvider.testResult.success
+                                  ? 'text-green-700 dark:text-green-300'
+                                  : 'text-red-700 dark:text-red-300'
+                                }`}>
+                                {selectedProvider.testResult.message}
+                              </p>
+                              {selectedProvider.testResult.latency && (
+                                <p className="text-xs text-green-600 mt-1">
+                                  Response time: {selectedProvider.testResult.latency}ms
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {selectedProvider.name === 'OpenRouter' && (
+                      {/* API Configuration */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="apiKey">API Key</Label>
+                          <PasswordInput
+                            id="apiKey"
+                            placeholder="Enter your API key"
+                            value={formData.apiKey}
+                            onChange={(e) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Your API key is encrypted and stored securely
+                          </p>
+                        </div>
+
                         <div className="space-y-2">
                           <Label htmlFor="baseUrl">Base URL</Label>
                           <Input
                             id="baseUrl"
-                            value={selectedProvider.baseUrl || 'https://openrouter.ai/api/v1'}
-                            placeholder="https://openrouter.ai/api/v1"
+                            placeholder="https://api.provider.com"
+                            value={formData.baseUrl}
+                            onChange={(e) => setFormData(prev => ({ ...prev, baseUrl: e.target.value }))}
                           />
                         </div>
-                      )}
 
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-base">Enable Provider</Label>
+                        <div className="space-y-2">
+                          <Label htmlFor="region">Region</Label>
+                          <SearchableSelect
+                            value={formData.region}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, region: value }))}
+                            options={[
+                              { value: 'us-east', label: 'US East', description: 'United States East Coast' },
+                              { value: 'us-west', label: 'US West', description: 'United States West Coast' },
+                              { value: 'eu-west', label: 'EU West', description: 'Europe West' },
+                              { value: 'asia-pacific', label: 'Asia Pacific', description: 'Asia Pacific Region' },
+                              { value: 'global', label: 'Global', description: 'Global endpoint' }
+                            ]}
+                            placeholder="Select region..."
+                          />
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex space-x-3 pt-4">
+                          <Button
+                            onClick={() => handleTestConnection(selectedProvider.id)}
+                            disabled={isTestingConnection || !formData.apiKey.trim()}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            {isTestingConnection ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Testing Connection...
+                              </>
+                            ) : (
+                              <>
+                                <TestTube className="h-4 w-4 mr-2" />
+                                Test Connection
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => handleSaveProvider(selectedProvider.id)}
+                            disabled={
+                              isSavingProvider ||
+                              selectedProvider.status !== 'test-passed' ||
+                              !formData.apiKey.trim()
+                            }
+                            className="flex-1"
+                          >
+                            {isSavingProvider ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4 mr-2" />
+                                Save Provider
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Help Text */}
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                          <div className="flex items-start space-x-3">
+                            <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium">Configuration Workflow</p>
+                              <ol className="text-xs text-muted-foreground mt-1 space-y-1">
+                                <li>1. Enter your API key and configuration</li>
+                                <li>2. Test the connection to verify credentials</li>
+                                <li>3. Save the provider configuration</li>
+                                <li>4. Models will be automatically fetched and displayed</li>
+                              </ol>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Models Tab - Only visible after provider is configured */}
+                  {shouldShowModelsTab && (
+                    <TabsContent value="models" className="border rounded-lg p-6 bg-card space-y-6 mt-4">
+                      {selectedProvider.status === 'fetching-models' ? (
+                        <div className="text-center py-12">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                          <h3 className="font-medium text-lg mb-2">Fetching Models</h3>
                           <p className="text-sm text-muted-foreground">
-                            Allow this provider to be used in widgets
+                            Loading available models from {selectedProvider.name}...
                           </p>
                         </div>
-                        <Switch defaultChecked={selectedProvider.status === 'connected'} />
-                      </div>
+                      ) : providerModels.length === 0 ? (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Brain className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="font-medium text-lg mb-2">No Models Found</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            No models were found for this provider.
+                          </p>
+                          <Button variant="outline" onClick={() => fetchModels(selectedProvider)}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Retry Fetch
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Models Header with Search and Filters */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium text-lg flex items-center">
+                                  <Brain className="h-5 w-5 mr-2 text-primary" />
+                                  Available Models
+                                </h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {filteredModels.length} of {providerModels.length} models
+                                  {selectedModels.size > 0 && ` • ${selectedModels.size} selected`}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setModelViewType(modelViewType === 'grid' ? 'table' : 'grid')}
+                                >
+                                  {modelViewType === 'grid' ? (
+                                    <List className="h-4 w-4" />
+                                  ) : (
+                                    <Grid3X3 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => fetchModels(selectedProvider)}>
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Refresh
+                                </Button>
+                              </div>
+                            </div>
 
-                      <div className="flex space-x-2">
-                        <Button 
-                          onClick={() => handleTestConnection(selectedProvider.id)}
-                          disabled={isTestingConnection}
-                        >
-                          {isTestingConnection ? 'Testing...' : 'Test Connection'}
-                        </Button>
-                        <Button variant="outline">Save Configuration</Button>
+                            {/* Search and Filters */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                              <div className="flex-1">
+                                <SearchInput
+                                  placeholder="Search models by name, description, or capabilities..."
+                                  value={modelSearchTerm}
+                                  onChange={(e) => setModelSearchTerm(e.target.value)}
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Select value={selectedModelFamily} onValueChange={setSelectedModelFamily}>
+                                  <SelectTrigger className="w-40">
+                                    <SelectValue placeholder="All Families" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">All Families</SelectItem>
+                                    {modelFamilies.map(family => (
+                                      <SelectItem key={family} value={family}>
+                                        {family}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="showDeprecated"
+                                    checked={showDeprecated}
+                                    onCheckedChange={(checked) => setShowDeprecated(checked as boolean)}
+                                  />
+                                  <Label htmlFor="showDeprecated" className="text-sm">
+                                    Show deprecated
+                                  </Label>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bulk Actions */}
+                            {selectedModels.size > 0 && (
+                              <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
+                                <div className="flex items-center space-x-3">
+                                  <CheckCircle className="h-5 w-5 text-primary" />
+                                  <div>
+                                    <p className="text-sm font-medium">{selectedModels.size} models selected</p>
+                                    <p className="text-xs text-muted-foreground">Apply actions to selected models</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('save', Array.from(selectedModels))}
+                                  >
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Save All
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('activate', Array.from(selectedModels))}
+                                  >
+                                    <Power className="h-4 w-4 mr-2" />
+                                    Activate All
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedModels(new Set())}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    Clear
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Models Display */}
+                          {modelViewType === 'grid' ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              {filteredModels.map((model) => (
+                                <ModelCard
+                                  key={model.id}
+                                  model={model}
+                                  isSelected={selectedModels.has(model.id)}
+                                  onToggleSelect={(modelId) => {
+                                    const newSelected = new Set(selectedModels);
+                                    if (newSelected.has(modelId)) {
+                                      newSelected.delete(modelId);
+                                    } else {
+                                      newSelected.add(modelId);
+                                    }
+                                    setSelectedModels(newSelected);
+                                  }}
+                                  onToggle={handleModelToggle}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <ModelTable
+                              models={filteredModels}
+                              selectedModels={selectedModels}
+                              onToggleSelect={(modelId) => {
+                                const newSelected = new Set(selectedModels);
+                                if (newSelected.has(modelId)) {
+                                  newSelected.delete(modelId);
+                                } else {
+                                  newSelected.add(modelId);
+                                }
+                                setSelectedModels(newSelected);
+                              }}
+                              onToggle={handleModelToggle}
+                            />
+                          )}
+
+                          {filteredModels.length === 0 && (
+                            <div className="text-center py-8">
+                              <Search className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                              <p className="text-sm text-muted-foreground">
+                                No models match your current filters
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </TabsContent>
+                  )}
+
+                  {/* Test Tab - Only visible after provider is configured */}
+                  {shouldShowTestTab && (
+                    <TabsContent value="test" className="border rounded-lg p-6 bg-card space-y-6 mt-4">
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-medium text-lg flex items-center mb-4">
+                            <TestTube className="h-5 w-5 mr-2 text-primary" />
+                            Provider Testing
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Test your provider connection and model responses
+                          </p>
+                        </div>
+                        {/* Test content would go here */}
                       </div>
                     </TabsContent>
+                  )}
 
-                    <TabsContent value="test" className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="testMessage">Test Message</Label>
-                        <Textarea
-                          id="testMessage"
-                          value={testMessage}
-                          onChange={(e) => setTestMessage(e.target.value)}
-                          placeholder="Enter a test message to send to the provider"
-                          rows={3}
-                        />
+                  {/* Analytics Tab - Only visible when provider is ready */}
+                  {shouldShowAnalyticsTab && (
+                    <TabsContent value="analytics" className="border rounded-lg p-6 bg-card space-y-6 mt-4">
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="font-medium text-lg flex items-center mb-4">
+                            <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                            Usage Analytics
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            Monitor usage, performance, and costs
+                          </p>
+                        </div>
+                        {/* Analytics content would go here */}
                       </div>
-
-                      <Button 
-                        onClick={handleTestMessage}
-                        disabled={isTestingConnection}
-                        className="w-full"
-                      >
-                        {isTestingConnection ? 'Sending Test Message...' : 'Send Test Message'}
-                      </Button>
-
-                      {testResult && (
-                        <div className="p-4 bg-muted rounded-lg">
-                          <h4 className="font-medium mb-2">Test Result:</h4>
-                          <p className="text-sm">{testResult}</p>
-                        </div>
-                      )}
-
-                      {selectedProvider.lastTested && (
-                        <div className="text-xs text-muted-foreground">
-                          Last tested: {selectedProvider.lastTested}
-                        </div>
-                      )}
                     </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-medium mb-2">Select a Provider</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Choose a provider from the list to configure and test
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                  )}
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </DashboardLayout>
+  );
+};
+
+// Model Card Component
+interface ModelCardProps {
+  model: ProviderModel;
+  isSelected: boolean;
+  onToggleSelect: (modelId: string) => void;
+  onToggle: (modelId: string, field: 'isSaved' | 'isActive' | 'isDefault') => void;
+}
+
+const ModelCard = ({ model, isSelected, onToggleSelect, onToggle }: ModelCardProps) => {
+  return (
+    <Card className={`group hover:shadow-lg transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : ''
+      } ${model.isDeprecated ? 'opacity-60' : ''}`}>
+      <CardContent className="p-6">
+        {/* Header with Selection */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start space-x-3 flex-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect(model.id)}
+            />
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <h5 className="font-semibold text-base">{model.name}</h5>
+                {model.isDeprecated && (
+                  <Badge variant="outline" className="text-xs">
+                    Deprecated
+                  </Badge>
+                )}
+                {model.isDefault && (
+                  <Badge variant="default" className="text-xs">
+                    <Star className="h-3 w-3 mr-1" />
+                    Default
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">{model.family}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {model.description}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Specifications */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <Database className="h-4 w-4 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Context</span>
+            </div>
+            <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+              {(model.contextWindow / 1000).toFixed(0)}K
+            </span>
+          </div>
+          <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <Zap className="h-4 w-4 text-green-600" />
+              <span className="text-xs font-medium text-green-700 dark:text-green-300">Max Output</span>
+            </div>
+            <span className="text-sm font-semibold text-green-900 dark:text-green-100">
+              {(model.maxTokens / 1000).toFixed(1)}K
+            </span>
+          </div>
+        </div>
+
+        {/* Pricing */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 rounded-lg border border-orange-200 dark:border-orange-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <ArrowDown className="h-4 w-4 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700 dark:text-orange-300">Input</span>
+            </div>
+            <span className="text-sm font-semibold text-orange-900 dark:text-orange-100">
+              ${model.inputCost}/1K
+            </span>
+          </div>
+          <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <ArrowUp className="h-4 w-4 text-purple-600" />
+              <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Output</span>
+            </div>
+            <span className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+              ${model.outputCost}/1K
+            </span>
+          </div>
+        </div>
+
+        {/* Capabilities */}
+        <div className="mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Capabilities</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {model.capabilities.map((capability) => (
+              <Badge
+                key={capability}
+                variant="secondary"
+                className="text-xs px-2 py-1 bg-muted/50 hover:bg-muted transition-colors"
+              >
+                {capability}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={model.isSaved}
+                onCheckedChange={() => onToggle(model.id, 'isSaved')}
+              />
+              <Label className="text-xs">Save</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={model.isActive}
+                onCheckedChange={() => onToggle(model.id, 'isActive')}
+                disabled={!model.isSaved}
+              />
+              <Label className="text-xs">Active</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={model.isDefault}
+                onCheckedChange={() => onToggle(model.id, 'isDefault')}
+                disabled={!model.isActive}
+              />
+              <Label className="text-xs">Default</Label>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Model Table Component
+interface ModelTableProps {
+  models: ProviderModel[];
+  selectedModels: Set<string>;
+  onToggleSelect: (modelId: string) => void;
+  onToggle: (modelId: string, field: 'isSaved' | 'isActive' | 'isDefault') => void;
+}
+
+const ModelTable = ({ models, selectedModels, onToggleSelect, onToggle }: ModelTableProps) => {
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="text-left p-4 font-medium text-sm">
+                <Checkbox
+                  checked={models.length > 0 && models.every(m => selectedModels.has(m.id))}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      models.forEach(m => selectedModels.add(m.id));
+                    } else {
+                      models.forEach(m => selectedModels.delete(m.id));
+                    }
+                  }}
+                />
+              </th>
+              <th className="text-left p-4 font-medium text-sm">Model</th>
+              <th className="text-left p-4 font-medium text-sm">Context</th>
+              <th className="text-left p-4 font-medium text-sm">Cost</th>
+              <th className="text-left p-4 font-medium text-sm">Controls</th>
+            </tr>
+          </thead>
+          <tbody>
+            {models.map((model) => (
+              <tr key={model.id} className="border-t hover:bg-muted/25">
+                <td className="p-4">
+                  <Checkbox
+                    checked={selectedModels.has(model.id)}
+                    onCheckedChange={() => onToggleSelect(model.id)}
+                  />
+                </td>
+                <td className="p-4">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{model.name}</span>
+                      {model.isDeprecated && (
+                        <Badge variant="outline" className="text-xs">Deprecated</Badge>
+                      )}
+                      {model.isDefault && (
+                        <Badge variant="default" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{model.family}</p>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className="text-sm">{(model.contextWindow / 1000).toFixed(0)}K tokens</span>
+                </td>
+                <td className="p-4">
+                  <div className="text-sm">
+                    <div>${model.inputCost}/1K in</div>
+                    <div>${model.outputCost}/1K out</div>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1">
+                      <Switch
+                        checked={model.isSaved}
+                        onCheckedChange={() => onToggle(model.id, 'isSaved')}
+                      />
+                      <Label className="text-xs">Save</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Switch
+                        checked={model.isActive}
+                        onCheckedChange={() => onToggle(model.id, 'isActive')}
+                        disabled={!model.isSaved}
+                      />
+                      <Label className="text-xs">Active</Label>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Switch
+                        checked={model.isDefault}
+                        onCheckedChange={() => onToggle(model.id, 'isDefault')}
+                        disabled={!model.isActive}
+                      />
+                      <Label className="text-xs">Default</Label>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

@@ -1,40 +1,53 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings, Bot, Code, Database, Zap, BarChart3, TestTube, Monitor, Palette } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Settings3DIcon, Bot3DIcon, Database3DIcon, Code3DIcon, Analytics3DIcon, Image3DIcon, Knowledge3DIcon } from '@/components/ui/Icon3D';
 
 const navigationItems = [
   {
     title: 'Widget Configuration',
-    icon: Settings,
+    icon: Settings3DIcon,
     href: '/dashboard/widget',
     description: 'Customize widget appearance and behavior',
     badge: 'New'
   },
   {
+    title: 'Knowledge Base',
+    icon: Knowledge3DIcon,
+    href: '/dashboard/knowledge',
+    description: 'Manage knowledge sources and content'
+  },
+  {
     title: 'AI Providers',
-    icon: Bot,
+    icon: Bot3DIcon,
     href: '/dashboard/providers',
     description: 'Manage AI provider configurations'
   },
   {
     title: 'Model Management',
-    icon: Database,
+    icon: Database3DIcon,
     href: '/dashboard/models',
     description: 'Configure and test AI models'
   },
   {
     title: 'Embed Code',
-    icon: Code,
+    icon: Code3DIcon,
     href: '/dashboard/embed',
     description: 'Generate and test embed code'
   },
   {
     title: 'Analytics',
-    icon: BarChart3,
+    icon: Analytics3DIcon,
     href: '/dashboard/analytics',
     description: 'View usage statistics'
+  },
+  {
+    title: 'Media Gallery',
+    icon: Image3DIcon,
+    href: '/dashboard/media',
+    description: 'Manage images and media files',
+    badge: 'Beta'
   }
 ];
 
@@ -58,7 +71,7 @@ export const DashboardSidebar = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6">
         <div className="space-y-1">
@@ -70,7 +83,7 @@ export const DashboardSidebar = () => {
                 cn(
                   "flex items-start space-x-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative",
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/20"
+                    ? "bg-sidebar-primary/90 text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/20"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-sm"
                 )
               }
@@ -78,12 +91,12 @@ export const DashboardSidebar = () => {
               {({ isActive }) => (
                 <>
                   <div className={cn(
-                    "relative p-2 rounded-lg transition-all duration-200",
-                    isActive 
-                      ? "bg-white/20" 
-                      : "bg-sidebar-accent group-hover:bg-sidebar-primary/10"
+                    "relative p-2 rounded-lg transition-all duration-200 transform hover:scale-105",
+                    isActive
+                      ? "bg-sidebar-primary shadow-lg border border-white/20"
+                      : "bg-sidebar-accent group-hover:bg-sidebar-primary/15 group-hover:shadow-md"
                   )}>
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    <item.icon className="h-6 w-6 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">

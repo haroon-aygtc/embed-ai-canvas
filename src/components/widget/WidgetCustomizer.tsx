@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -24,7 +23,7 @@ export const WidgetCustomizer = ({ config, onConfigChange }: WidgetCustomizerPro
             <Label htmlFor="theme">Theme</Label>
             <Select
               value={config.theme}
-              onValueChange={(value: 'light' | 'dark' | 'auto') => 
+              onValueChange={(value: 'light' | 'dark' | 'auto') =>
                 onConfigChange({ theme: value })
               }
             >
@@ -38,12 +37,12 @@ export const WidgetCustomizer = ({ config, onConfigChange }: WidgetCustomizerPro
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="size">Size</Label>
             <Select
               value={config.size}
-              onValueChange={(value: 'small' | 'medium' | 'large') => 
+              onValueChange={(value: 'small' | 'medium' | 'large') =>
                 onConfigChange({ size: value })
               }
             >
@@ -59,43 +58,45 @@ export const WidgetCustomizer = ({ config, onConfigChange }: WidgetCustomizerPro
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="primaryColor">Primary Color</Label>
-          <div className="flex space-x-2">
-            <Input
-              id="primaryColor"
-              type="color"
-              value={config.primaryColor}
-              onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-              className="w-12 h-10 p-1 border rounded"
-            />
-            <Input
-              value={config.primaryColor}
-              onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-              placeholder="#3b82f6"
-              className="flex-1"
-            />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="primaryColor">Primary Color</Label>
+            <div className="flex space-x-2">
+              <Input
+                id="primaryColor"
+                type="color"
+                value={config.primaryColor}
+                onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                className="w-12 h-10 p-1 border rounded"
+              />
+              <Input
+                value={config.primaryColor}
+                onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                placeholder="#3b82f6"
+                className="flex-1"
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="position">Position</Label>
-          <Select
-            value={config.position}
-            onValueChange={(value: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left') => 
-              onConfigChange({ position: value })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bottom-right">Bottom Right</SelectItem>
-              <SelectItem value="bottom-left">Bottom Left</SelectItem>
-              <SelectItem value="top-right">Top Right</SelectItem>
-              <SelectItem value="top-left">Top Left</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <Label htmlFor="position">Position</Label>
+            <Select
+              value={config.position}
+              onValueChange={(value: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left') =>
+                onConfigChange({ position: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bottom-right">↘️ Bottom Right</SelectItem>
+                <SelectItem value="bottom-left">↙️ Bottom Left</SelectItem>
+                <SelectItem value="top-right">↗️ Top Right</SelectItem>
+                <SelectItem value="top-left">↖️ Top Left</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -103,8 +103,6 @@ const templates: Template[] = [
 ];
 
 export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTemplatesProps) => {
-  const categories = [...new Set(templates.map(t => t.category))];
-
   return (
     <div className="space-y-6">
       <div>
@@ -114,62 +112,102 @@ export const WidgetTemplates = ({ onSelectTemplate, currentConfig }: WidgetTempl
         </p>
       </div>
 
-      {categories.map(category => (
-        <div key={category} className="space-y-3">
-          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-            {category}
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates
-              .filter(template => template.category === category)
-              .map(template => (
-                <Card 
-                  key={template.id} 
-                  className="relative cursor-pointer hover:shadow-md transition-shadow group"
-                  onClick={() => onSelectTemplate(template.config)}
+      {/* Grid Layout for All Templates */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {templates.map(template => (
+          <Card
+            key={template.id}
+            className="relative cursor-pointer hover:shadow-md transition-all hover:scale-105 group"
+            onClick={() => onSelectTemplate(template.config)}
+          >
+            <CardContent className="p-4">
+              {/* Template Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h5 className="font-semibold text-sm">{template.name}</h5>
+                  {template.popular && (
+                    <Badge variant="secondary" className="text-xs">Popular</Badge>
+                  )}
+                </div>
+                <div
+                  className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                  style={{ borderColor: template.config.primaryColor }}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <h5 className="font-semibold">{template.name}</h5>
-                        {template.popular && (
-                          <Badge variant="secondary" className="text-xs">Popular</Badge>
-                        )}
-                      </div>
-                      <div 
-                        className="w-4 h-4 rounded-full border-2 flex items-center justify-center"
-                        style={{ borderColor: template.config.primaryColor }}
-                      >
-                        <div 
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: template.config.primaryColor }}
-                        />
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {template.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{template.config.theme === 'dark' ? 'Dark' : 'Light'} theme</span>
-                        <span>•</span>
-                        <span>{template.config.size} size</span>
-                      </div>
-                      
-                      <Button size="sm" variant="outline" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                        <Check className="h-3 w-3 mr-1" />
-                        Apply
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            }
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: template.config.primaryColor }}
+                  />
+                </div>
+              </div>
+
+              {/* Category Badge */}
+              <div className="mb-3">
+                <Badge variant="outline" className="text-xs">
+                  {template.category}
+                </Badge>
+              </div>
+
+              {/* Description */}
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-3 min-h-[3rem]">
+                {template.description}
+              </p>
+
+              {/* Template Details */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Theme:</span>
+                  <span className="font-medium">{template.config.theme === 'dark' ? 'Dark' : 'Light'}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Size:</span>
+                  <span className="font-medium capitalize">{template.config.size}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Position:</span>
+                  <span className="font-medium">{template.config.position.replace('-', ' ')}</span>
+                </div>
+              </div>
+
+              {/* Apply Button */}
+              <Button
+                size="sm"
+                className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                variant="outline"
+              >
+                <Check className="h-3 w-3 mr-1" />
+                Apply Template
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="border-t pt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-medium mb-1">Need something custom?</h4>
+            <p className="text-sm text-muted-foreground">Start with a blank template and customize everything</p>
           </div>
+          <Button
+            variant="outline"
+            onClick={() => onSelectTemplate({
+              theme: 'light',
+              primaryColor: '#3b82f6',
+              position: 'bottom-right',
+              size: 'medium',
+              welcomeMessage: 'Hello! How can I help you today?',
+              placeholder: 'Type your message...',
+              title: 'AI Assistant',
+              subtitle: 'Powered by ChatWidget Pro',
+              enabled: true,
+              showBranding: true,
+            })}
+          >
+            Start Blank
+          </Button>
         </div>
-      ))}
+      </div>
     </div>
   );
 };

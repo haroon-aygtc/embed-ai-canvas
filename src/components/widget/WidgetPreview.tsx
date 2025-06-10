@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, X, Send, Minimize2, Maximize2, Sun, Moon } from 'lucide-react';
+import { MessageCircle, X, Send, Minimize2, Maximize2, Sun, Moon, Move } from 'lucide-react';
 import { WidgetConfig } from './WidgetConfiguration';
 
 interface WidgetPreviewProps {
   config: WidgetConfig;
+  onConfigChange?: (updates: Partial<WidgetConfig>) => void;
 }
 
 interface Message {
@@ -17,7 +17,7 @@ interface Message {
   timestamp: Date;
 }
 
-export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
+export const WidgetPreview = ({ config, onConfigChange }: WidgetPreviewProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -30,6 +30,7 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light');
+  const [showPositionControls, setShowPositionControls] = useState(false);
 
   const sendMessage = () => {
     if (!inputValue.trim()) return;
@@ -86,6 +87,19 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
     return actualTheme === 'dark' ? 'dark' : '';
   };
 
+  const handlePositionChange = (position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left') => {
+    if (onConfigChange) {
+      onConfigChange({ position });
+    }
+  };
+
+  const positionOptions = [
+    { id: 'top-left', label: 'Top Left', classes: 'top-6 left-6' },
+    { id: 'top-right', label: 'Top Right', classes: 'top-6 right-6' },
+    { id: 'bottom-left', label: 'Bottom Left', classes: 'bottom-6 left-6' },
+    { id: 'bottom-right', label: 'Bottom Right', classes: 'bottom-6 right-6' },
+  ] as const;
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-4">
@@ -95,6 +109,17 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
             <CardDescription>See how your widget will appear on your website</CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            {onConfigChange && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPositionControls(!showPositionControls)}
+                className="flex items-center gap-2"
+              >
+                <Move className="h-4 w-4" />
+                Position
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -126,8 +151,12 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
                 Your Website
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                This is a preview of how the chat widget will appear on your website. 
-                The widget will be positioned as configured.
+                This is a preview of how the chat widget will appear on your website.
+                {onConfigChange && showPositionControls && (
+                  <span className="block mt-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                    Click the corner buttons to change widget position
+                  </span>
+                )}
               </p>
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
                 {[1, 2, 3].map((i) => (
@@ -136,6 +165,29 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
               </div>
             </div>
           </div>
+
+          {/* Position Control Buttons */}
+          {onConfigChange && showPositionControls && (
+            <>
+              {positionOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handlePositionChange(option.id)}
+                  className={`absolute z-20 w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 ${config.position === option.id
+                      ? 'bg-blue-500 border-blue-600 shadow-lg scale-110'
+                      : 'bg-white/90 dark:bg-gray-800/90 border-gray-300 dark:border-gray-600 hover:border-blue-400 shadow-md backdrop-blur-sm'
+                    } ${option.classes}`}
+                  title={`Move to ${option.label}`}
+                >
+                  {config.position === option.id && (
+                    <div className="w-4 h-4 bg-white rounded-full mx-auto flex items-center justify-center">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </>
+          )}
 
           {/* Widget */}
           <div className={`absolute ${getPositionClasses()} z-10`}>
@@ -154,7 +206,7 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
             {isOpen && (
               <div className={`${getWidgetSize()} bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden transition-all duration-300`}>
                 {/* Header */}
-                <div 
+                <div
                   className="p-4 flex items-center justify-between text-white"
                   style={{ backgroundColor: config.primaryColor }}
                 >
@@ -194,11 +246,10 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
                           className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[75%] p-3 rounded-lg text-sm leading-relaxed ${
-                              message.isUser
+                            className={`max-w-[75%] p-3 rounded-lg text-sm leading-relaxed ${message.isUser
                                 ? 'text-white rounded-br-sm'
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-sm'
-                            }`}
+                              }`}
                             style={message.isUser ? { backgroundColor: config.primaryColor } : {}}
                           >
                             {message.text}
@@ -208,7 +259,7 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
                     </div>
 
                     {/* Input */}
-                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex space-x-2">
                         <Input
                           value={inputValue}

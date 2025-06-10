@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Code2, Eye } from 'lucide-react';
+import { Palette, Code2, Eye, Sparkles } from 'lucide-react';
 import { WidgetPreview } from './WidgetPreview';
 import { WidgetTemplates } from './WidgetTemplates';
 import { ConfigurationTabs } from './ConfigurationTabs';
 import { EmbedCodeGenerator } from '../embed/EmbedCodeGenerator';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export interface WidgetConfig {
   theme: 'light' | 'dark' | 'auto';
@@ -20,6 +20,22 @@ export interface WidgetConfig {
   subtitle: string;
   enabled: boolean;
   showBranding: boolean;
+  selectedModelId?: string;
+  knowledgeBase?: {
+    selectedKnowledgeBases?: string[];
+    sources: Array<{
+      id: string;
+      name: string;
+      type: 'docs' | 'faq' | 'tickets' | 'custom';
+      status: 'active' | 'training' | 'inactive';
+    }>;
+    settings: {
+      autoLearning: boolean;
+      contextAwareness: boolean;
+      realTimeUpdates: boolean;
+      confidenceThreshold?: boolean;
+    };
+  };
 }
 
 const defaultConfig: WidgetConfig = {
@@ -33,9 +49,24 @@ const defaultConfig: WidgetConfig = {
   subtitle: 'Powered by ChatWidget Pro',
   enabled: true,
   showBranding: true,
+  selectedModelId: 'gpt-4',
+  knowledgeBase: {
+    selectedKnowledgeBases: [],
+    sources: [],
+    settings: {
+      autoLearning: true,
+      contextAwareness: true,
+      realTimeUpdates: false,
+      confidenceThreshold: true
+    }
+  }
 };
 
-export const WidgetConfiguration = () => {
+interface WidgetConfigurationProps {
+  onSetupWizard?: () => void;
+}
+
+export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps) => {
   const [config, setConfig] = useState<WidgetConfig>(defaultConfig);
   const [activeTab, setActiveTab] = useState('design');
 
@@ -48,24 +79,25 @@ export const WidgetConfiguration = () => {
     setActiveTab('design'); // Switch to design tab after selecting template
   };
 
+  const headerActions = (
+    <>
+      <Button variant="outline">
+        Save Draft
+      </Button>
+      <Button>
+        Publish Changes
+      </Button>
+    </>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Widget Configuration</h1>
-          <p className="text-muted-foreground mt-1">
-            Customize your AI chat widget with professional templates or create your own design
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            Save Draft
-          </Button>
-          <Button>
-            Publish Changes
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Widget Configuration"
+        description="Customize your AI chat widget with professional templates or create your own design"
+        onSetupWizard={onSetupWizard}
+        actions={headerActions}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -86,7 +118,7 @@ export const WidgetConfiguration = () => {
         <TabsContent value="templates" className="mt-6">
           <Card>
             <CardContent className="p-6">
-              <WidgetTemplates 
+              <WidgetTemplates
                 onSelectTemplate={handleTemplateSelect}
                 currentConfig={config}
               />
@@ -99,9 +131,9 @@ export const WidgetConfiguration = () => {
             <div className="xl:col-span-2">
               <ConfigurationTabs config={config} onConfigChange={updateConfig} />
             </div>
-            
+
             <div className="xl:sticky xl:top-6">
-              <WidgetPreview config={config} />
+              <WidgetPreview config={config} onConfigChange={updateConfig} />
             </div>
           </div>
         </TabsContent>
@@ -111,9 +143,9 @@ export const WidgetConfiguration = () => {
             <div className="xl:col-span-2">
               <EmbedCodeGenerator config={config} />
             </div>
-            
+
             <div className="xl:sticky xl:top-6">
-              <WidgetPreview config={config} />
+              <WidgetPreview config={config} onConfigChange={updateConfig} />
             </div>
           </div>
         </TabsContent>
