@@ -530,24 +530,509 @@ const KnowledgePage = () => {
 
                     {/* Sources Tab */}
                     <TabsContent value="sources" className="space-y-6">
+                        {/* Sources Header with Search and Actions */}
+                        <Card>
+                            <CardContent className="p-6">
+                                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-semibold mb-2">Knowledge Sources</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Manage and monitor all content sources across your knowledge bases
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Search sources..."
+                                                className="pl-10 w-64"
+                                            />
+                                        </div>
+                                        <Select defaultValue="all">
+                                            <SelectTrigger className="w-32">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Types</SelectItem>
+                                                <SelectItem value="file">Files</SelectItem>
+                                                <SelectItem value="url">Websites</SelectItem>
+                                                <SelectItem value="api">APIs</SelectItem>
+                                                <SelectItem value="database">Databases</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Button>
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Add Source
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Sources Statistics */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <FileText className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground">Total Sources</p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-2xl font-bold">24</p>
+                                                <TrendingUp className="h-4 w-4 text-green-600" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <CheckCircle className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground">Active</p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-2xl font-bold">18</p>
+                                                <Badge variant="outline" className="text-xs">+3</Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <RefreshCw className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground">Processing</p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-2xl font-bold">3</p>
+                                                <Badge variant="outline" className="text-xs">67%</Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardContent className="p-4">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <AlertCircle className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-muted-foreground">Errors</p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-2xl font-bold">3</p>
+                                                <Badge variant="destructive" className="text-xs">Fix</Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Add Source Options */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Knowledge Sources</CardTitle>
+                                <CardTitle>Add New Knowledge Source</CardTitle>
                                 <CardDescription>
-                                    Manage and monitor all content sources across your knowledge bases
+                                    Choose how you'd like to add content to your knowledge base. Simply click on any option below to get started.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-center py-12">
-                                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium mb-2">Sources Management</h3>
-                                    <p className="text-muted-foreground mb-4">
-                                        Add and manage content sources for your knowledge bases
-                                    </p>
-                                    <Button>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Source
-                                    </Button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {/* Upload Files */}
+                                    <Card className="cursor-pointer hover:shadow-md transition-all duration-200 group">
+                                        <CardContent className="p-6 text-center">
+                                            <div className="p-3 bg-primary/10 rounded-lg mx-auto mb-4 w-fit">
+                                                <Upload className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <h4 className="font-semibold text-lg mb-2">Upload Files</h4>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Upload PDFs, Word docs, text files, and more
+                                            </p>
+                                            <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>PDF, DOCX, TXT</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Drag & Drop</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Bulk Upload</span>
+                                                </div>
+                                            </div>
+                                            <Button className="w-full">
+                                                <Upload className="h-4 w-4 mr-2" />
+                                                Choose Files
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Website URL */}
+                                    <Card className="cursor-pointer hover:shadow-md transition-all duration-200 group">
+                                        <CardContent className="p-6 text-center">
+                                            <div className="p-3 bg-primary/10 rounded-lg mx-auto mb-4 w-fit">
+                                                <Globe className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <h4 className="font-semibold text-lg mb-2">Website URL</h4>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Crawl and index content from any website
+                                            </p>
+                                            <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Auto Crawling</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Scheduled Updates</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Sitemap Support</span>
+                                                </div>
+                                            </div>
+                                            <Button className="w-full">
+                                                <Globe className="h-4 w-4 mr-2" />
+                                                Add Website
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* API Endpoint */}
+                                    <Card className="cursor-pointer hover:shadow-md transition-all duration-200 group">
+                                        <CardContent className="p-6 text-center">
+                                            <div className="p-3 bg-primary/10 rounded-lg mx-auto mb-4 w-fit">
+                                                <Code className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <h4 className="font-semibold text-lg mb-2">API Endpoint</h4>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Connect to REST APIs and data sources
+                                            </p>
+                                            <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>REST & GraphQL</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Authentication</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Real-time Sync</span>
+                                                </div>
+                                            </div>
+                                            <Button className="w-full">
+                                                <Code className="h-4 w-4 mr-2" />
+                                                Connect API
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Database */}
+                                    <Card className="cursor-pointer hover:shadow-md transition-all duration-200 group">
+                                        <CardContent className="p-6 text-center">
+                                            <div className="p-3 bg-primary/10 rounded-lg mx-auto mb-4 w-fit">
+                                                <Database className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <h4 className="font-semibold text-lg mb-2">Database</h4>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Connect to SQL and NoSQL databases
+                                            </p>
+                                            <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>MySQL, PostgreSQL</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>MongoDB, Redis</span>
+                                                </div>
+                                                <div className="flex items-center justify-center space-x-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-600" />
+                                                    <span>Secure Connection</span>
+                                                </div>
+                                            </div>
+                                            <Button className="w-full">
+                                                <Database className="h-4 w-4 mr-2" />
+                                                Connect DB
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* Quick Start Guide */}
+                                <div className="mt-8 p-4 bg-muted/30 rounded-lg border">
+                                    <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                                <span className="text-xs font-bold text-primary">1</span>
+                                            </div>
+                                            <span>Choose source type</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                                <span className="text-xs font-bold text-primary">2</span>
+                                            </div>
+                                            <span>Configure settings</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                                <span className="text-xs font-bold text-primary">3</span>
+                                            </div>
+                                            <span>Start processing</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Sources List */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>All Sources</CardTitle>
+                                        <CardDescription>
+                                            Monitor and manage individual content sources
+                                        </CardDescription>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Button variant="outline" size="sm">
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Export
+                                        </Button>
+                                        <Button variant="outline" size="sm">
+                                            <RefreshCw className="h-4 w-4 mr-2" />
+                                            Sync All
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {/* Source Item 1 - PDF Document */}
+                                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
+                                        <div className="flex items-center space-x-4 flex-1">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <FileText className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="font-medium line-clamp-1">Product Manual v2.1.pdf</h4>
+                                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">active</Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                                    <span>Product Documentation</span>
+                                                    <span>•</span>
+                                                    <span>2.4 MB</span>
+                                                    <span>•</span>
+                                                    <span>156 pages</span>
+                                                    <span>•</span>
+                                                    <span>Last sync: 2 hours ago</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">94% accuracy</div>
+                                                <div className="text-xs text-muted-foreground">1,250 queries</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" title="View Details">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Sync Now">
+                                                <RefreshCw className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="More Options">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Source Item 2 - Website */}
+                                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
+                                        <div className="flex items-center space-x-4 flex-1">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <Globe className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="font-medium line-clamp-1">Company Website</h4>
+                                                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">processing</Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                                    <span>https://company.com</span>
+                                                    <span>•</span>
+                                                    <span>890 MB</span>
+                                                    <span>•</span>
+                                                    <span>234 pages</span>
+                                                    <span>•</span>
+                                                    <span>Processing: 67%</span>
+                                                </div>
+                                                <Progress value={67} className="h-1 mt-2" />
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">88% accuracy</div>
+                                                <div className="text-xs text-muted-foreground">567 queries</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" title="View Details">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Pause Processing">
+                                                <Clock className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="More Options">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Source Item 3 - API */}
+                                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
+                                        <div className="flex items-center space-x-4 flex-1">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <Code className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="font-medium line-clamp-1">REST API Documentation</h4>
+                                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">active</Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                                    <span>API Documentation</span>
+                                                    <span>•</span>
+                                                    <span>156 MB</span>
+                                                    <span>•</span>
+                                                    <span>45 endpoints</span>
+                                                    <span>•</span>
+                                                    <span>Auto-sync: Daily</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">96% accuracy</div>
+                                                <div className="text-xs text-muted-foreground">445 queries</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" title="View Details">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Test Connection">
+                                                <Zap className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="More Options">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Source Item 4 - Error State */}
+                                    <div className="flex items-center justify-between p-4 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors group">
+                                        <div className="flex items-center space-x-4 flex-1">
+                                            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
+                                                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="font-medium line-clamp-1">Legacy Database</h4>
+                                                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">error</Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                                    <span>Training Materials</span>
+                                                    <span>•</span>
+                                                    <span>Connection failed</span>
+                                                    <span>•</span>
+                                                    <span className="text-red-600 dark:text-red-400">Authentication error</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium text-red-600">Error</div>
+                                                <div className="text-xs text-muted-foreground">Last sync: 3 days ago</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" title="View Error Details">
+                                                <Info className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Fix Connection">
+                                                <Settings className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Retry Sync">
+                                                <RefreshCw className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="More Options">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Source Item 5 - File Upload */}
+                                    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
+                                        <div className="flex items-center space-x-4 flex-1">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <Layers className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                    <h4 className="font-medium line-clamp-1">Training Videos Collection</h4>
+                                                    <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">inactive</Badge>
+                                                </div>
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                                    <span>Training Materials</span>
+                                                    <span>•</span>
+                                                    <span>3.1 GB</span>
+                                                    <span>•</span>
+                                                    <span>67 files</span>
+                                                    <span>•</span>
+                                                    <span>Manual sync</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">85% accuracy</div>
+                                                <div className="text-xs text-muted-foreground">234 queries</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" title="View Details">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="Activate">
+                                                <Zap className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" title="More Options">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
