@@ -222,6 +222,26 @@ class Widget extends Model
             ]
         ];
 
+        // Get configuration from active configuration first, then fallback to widget configuration
+        $activeConfig = $this->activeConfiguration;
+        if ($activeConfig) {
+            $configFromDb = [
+                'theme' => $activeConfig->theme,
+                'primaryColor' => $activeConfig->primary_color,
+                'position' => $activeConfig->position,
+                'size' => $activeConfig->size,
+                'welcomeMessage' => $activeConfig->welcome_message,
+                'placeholder' => $activeConfig->placeholder,
+                'title' => $activeConfig->title,
+                'subtitle' => $activeConfig->subtitle,
+                'enabled' => $activeConfig->enabled,
+                'showBranding' => $activeConfig->show_branding,
+                'selectedModelId' => $activeConfig->selected_model_id,
+                'knowledgeBase' => $activeConfig->knowledge_base_config ?? $defaults['knowledgeBase'],
+            ];
+            return array_merge($defaults, array_filter($configFromDb, fn($value) => $value !== null));
+        }
+
         return array_merge($defaults, $this->configuration ?? []);
     }
 

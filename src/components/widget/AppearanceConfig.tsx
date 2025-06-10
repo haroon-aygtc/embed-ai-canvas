@@ -11,16 +11,44 @@ import {
 import { HelpTooltip } from "@/components/ui/HelpSystem";
 import { WidgetConfig } from "./WidgetConfiguration";
 import { COLOR_PRESETS } from "@/lib/constants/widget-constants";
+import { useWidget } from "@/hooks/useWidget";
+import { toast } from "sonner";
 
 interface AppearanceConfigProps {
   config: WidgetConfig;
   onConfigChange: (updates: Partial<WidgetConfig>) => void;
+  widgetId?: number;
+  isLoading?: boolean;
 }
 
 export const AppearanceConfig = ({
   config,
   onConfigChange,
+  widgetId,
+  isLoading = false,
 }: AppearanceConfigProps) => {
+  const { updateWidget } = useWidget();
+
+  const handleConfigUpdate = async (updates: Partial<WidgetConfig>) => {
+    // Update local state immediately for better UX
+    onConfigChange(updates);
+
+    // If we have a widgetId, save to backend
+    if (widgetId) {
+      try {
+        await updateWidget(widgetId, {
+          configuration: {
+            ...config,
+            ...updates,
+          },
+        });
+        toast.success("Appearance settings saved successfully");
+      } catch (error) {
+        console.error("Failed to save appearance settings:", error);
+        toast.error("Failed to save appearance settings");
+      }
+    }
+  };
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -50,8 +78,9 @@ export const AppearanceConfig = ({
                 <Select
                   value={config.theme}
                   onValueChange={(value: "light" | "dark" | "auto") =>
-                    onConfigChange({ theme: value })
+                    handleConfigUpdate({ theme: value })
                   }
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -74,8 +103,9 @@ export const AppearanceConfig = ({
                 <Select
                   value={config.size}
                   onValueChange={(value: "small" | "medium" | "large") =>
-                    onConfigChange({ size: value })
+                    handleConfigUpdate({ size: value })
                   }
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -112,7 +142,8 @@ export const AppearanceConfig = ({
                       | "bottom-left"
                       | "top-right"
                       | "top-left",
-                  ) => onConfigChange({ position: value })}
+                  ) => handleConfigUpdate({ position: value })}
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -141,19 +172,21 @@ export const AppearanceConfig = ({
                     type="color"
                     value={config.primaryColor}
                     onChange={(e) =>
-                      onConfigChange({ primaryColor: e.target.value })
+                      handleConfigUpdate({ primaryColor: e.target.value })
                     }
                     className="w-16 h-10 p-1 border rounded cursor-pointer"
                     title="Pick custom color"
+                    disabled={isLoading}
                   />
                   <Input
                     value={config.primaryColor}
                     onChange={(e) =>
-                      onConfigChange({ primaryColor: e.target.value })
+                      handleConfigUpdate({ primaryColor: e.target.value })
                     }
                     placeholder="#3b82f6"
                     className="flex-1"
                     title="Enter hex color code"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -179,11 +212,15 @@ export const AppearanceConfig = ({
               {COLOR_PRESETS.map((preset) => (
                 <button
                   key={preset.value}
-                  className={`p-4 rounded-lg border-2 transition-all hover:scale-[1.02] text-left group ${config.primaryColor === preset.value
-                    ? "border-primary bg-primary/5"
-                    : "border-muted hover:border-muted-foreground/20"
-                    }`}
-                  onClick={() => onConfigChange({ primaryColor: preset.value })}
+                  className={`p-4 rounded-lg border-2 transition-all hover:scale-[1.02] text-left group ${
+                    config.primaryColor === preset.value
+                      ? "border-primary bg-primary/5"
+                      : "border-muted hover:border-muted-foreground/20"
+                  }`}
+                  onClick={() =>
+                    handleConfigUpdate({ primaryColor: preset.value })
+                  }
+                  disabled={isLoading}
                 >
                   <div className="flex items-center space-x-3">
                     <div

@@ -393,7 +393,7 @@ class WidgetService
         $activeConfig = $widget->activeConfiguration;
 
         if ($activeConfig) {
-            $activeConfig->update(array_filter([
+            $updateData = array_filter([
                 'theme' => $configData['theme'] ?? null,
                 'primary_color' => $configData['primaryColor'] ?? null,
                 'position' => $configData['position'] ?? null,
@@ -406,12 +406,36 @@ class WidgetService
                 'show_branding' => $configData['showBranding'] ?? null,
                 'selected_model_id' => $configData['selectedModelId'] ?? null,
                 'knowledge_base_config' => $configData['knowledgeBase'] ?? null,
-            ], fn($value) => $value !== null));
+            ], fn($value) => $value !== null);
+
+            if (!empty($updateData)) {
+                $activeConfig->update($updateData);
+            }
+        } else {
+            // Create new active configuration if none exists
+            WidgetConfiguration::create([
+                'widget_id' => $widget->id,
+                'version' => 1,
+                'is_active' => true,
+                'theme' => $configData['theme'] ?? 'light',
+                'primary_color' => $configData['primaryColor'] ?? '#3b82f6',
+                'position' => $configData['position'] ?? 'bottom-right',
+                'size' => $configData['size'] ?? 'medium',
+                'title' => $configData['title'] ?? 'AI Assistant',
+                'subtitle' => $configData['subtitle'] ?? 'Powered by ChatWidget Pro',
+                'welcome_message' => $configData['welcomeMessage'] ?? 'Hello! How can I help you today?',
+                'placeholder' => $configData['placeholder'] ?? 'Type your message...',
+                'enabled' => $configData['enabled'] ?? true,
+                'show_branding' => $configData['showBranding'] ?? true,
+                'selected_model_id' => $configData['selectedModelId'] ?? null,
+                'knowledge_base_config' => $configData['knowledgeBase'] ?? null,
+            ]);
         }
 
         // Also update the widget's configuration JSON for backward compatibility
         $widget->update([
-            'configuration' => array_merge($widget->configuration ?? [], $configData)
+            'configuration' => array_merge($widget->configuration ?? [], $configData),
+            'last_updated_at' => now(),
         ]);
     }
 
