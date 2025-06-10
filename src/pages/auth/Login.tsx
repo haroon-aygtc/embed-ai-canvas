@@ -14,6 +14,12 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
+  authApi,
+  formatApiErrors,
+  isNetworkError,
+  getErrorMessage,
+} from "@/services/auth";
+import {
   Eye,
   EyeOff,
   Mail,
@@ -35,23 +41,45 @@ const Login = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const validateField = (field: string, value: string) => {
+    let error = "";
+
+    switch (field) {
+      case "email":
+        if (!value.trim()) {
+          error = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = "Please enter a valid email address";
+        }
+        break;
+      case "password":
+        if (!value) {
+          error = "Password is required";
+        } else if (value.length < 6) {
+          error = "Password must be at least 6 characters";
+        }
+        break;
+    }
+
+    return error;
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
+    const emailError = validateField("email", formData.email);
+    const passwordError = validateField("password", formData.password);
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
+    if (emailError) newErrors.email = emailError;
+    if (passwordError) newErrors.password = passwordError;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFieldBlur = (field: string, value: string) => {
+    const error = validateField(field, value);
+    setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,23 +97,50 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      toast({
-        title: "Welcome back!",
-        description: "You have been successfully logged in.",
-        className: "bg-green-50 border-green-200 text-green-800",
+      const response = await authApi.login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard/widget");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-      });
+      if (response.success) {
+        toast({
+          title: "Welcome back!",
+          description:
+            response.message || "You have been successfully logged in.",
+          className: "bg-green-50 border-green-200 text-green-800",
+        });
+
+        // Redirect to dashboard
+        navigate("/dashboard/widget");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+
+      if (isNetworkError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Connection Error",
+          description:
+            "Unable to connect to the server. Please check your internet connection and try again.",
+        });
+      } else if (error.errors) {
+        // Handle validation errors from API
+        const apiErrors = formatApiErrors(error.errors);
+        setErrors(apiErrors);
+
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description:
+            error.message || "Please check your credentials and try again.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: getErrorMessage(error),
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +148,7 @@ const Login = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -211,14 +267,16 @@ const Login = () => {
                       onChange={(e) =>
                         handleInputChange("email", e.target.value)
                       }
+                      onBlur={(e) => handleFieldBlur("email", e.target.value)}
                       className={cn(
                         "pl-10 h-12",
                         errors.email &&
-                          "border-red-500 focus-visible:ring-red-500",
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
                       )}
                       aria-describedby={
                         errors.email ? "email-error" : undefined
                       }
+                      aria-invalid={!!errors.email}
                       disabled={isLoading}
                     />
                   </div>
@@ -246,14 +304,18 @@ const Login = () => {
                       onChange={(e) =>
                         handleInputChange("password", e.target.value)
                       }
+                      onBlur={(e) =>
+                        handleFieldBlur("password", e.target.value)
+                      }
                       className={cn(
                         "pl-10 h-12",
                         errors.password &&
-                          "border-red-500 focus-visible:ring-red-500",
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
                       )}
                       aria-describedby={
                         errors.password ? "password-error" : undefined
                       }
+                      aria-invalid={!!errors.password}
                       disabled={isLoading}
                     />
                   </div>

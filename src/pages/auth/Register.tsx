@@ -14,6 +14,12 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
+  authApi,
+  formatApiErrors,
+  isNetworkError,
+  getErrorMessage,
+} from "@/services/auth";
+import {
   User,
   Mail,
   Lock,
@@ -30,8 +36,7 @@ const Register = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     company: "",
     password: "",
@@ -40,37 +45,62 @@ const Register = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  const validateField = (field: string, value: string) => {
+    let error = "";
+
+    switch (field) {
+      case "fullName":
+        if (!value.trim()) {
+          error = "Full name is required";
+        } else if (value.trim().length < 2) {
+          error = "Full name must be at least 2 characters";
+        } else if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
+          error = "Full name can only contain letters and spaces";
+        }
+        break;
+      case "email":
+        if (!value.trim()) {
+          error = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = "Please enter a valid email address";
+        }
+        break;
+      case "password":
+        if (!value) {
+          error = "Password is required";
+        } else if (value.length < 8) {
+          error = "Password must be at least 8 characters";
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          error = "Password must contain uppercase, lowercase, and number";
+        }
+        break;
+      case "confirmPassword":
+        if (!value) {
+          error = "Please confirm your password";
+        } else if (formData.password !== value) {
+          error = "Passwords do not match";
+        }
+        break;
+    }
+
+    return error;
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
+    const fullNameError = validateField("fullName", formData.fullName);
+    const emailError = validateField("email", formData.email);
+    const passwordError = validateField("password", formData.password);
+    const confirmPasswordError = validateField(
+      "confirmPassword",
+      formData.confirmPassword,
+    );
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password =
-        "Password must contain uppercase, lowercase, and number";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
+    if (fullNameError) newErrors.fullName = fullNameError;
+    if (emailError) newErrors.email = emailError;
+    if (passwordError) newErrors.password = passwordError;
+    if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
 
     if (!acceptedTerms) {
       newErrors.terms = "You must accept the terms and conditions";
@@ -78,6 +108,11 @@ const Register = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFieldBlur = (field: string, value: string) => {
+    const error = validateField(field, value);
+    setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,24 +130,53 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      toast({
-        title: "Account Created Successfully!",
-        description:
-          "Welcome to ChatWidget Pro. You can now sign in to your account.",
-        className: "bg-green-50 border-green-200 text-green-800",
+      const response = await authApi.register({
+        fullName: formData.fullName,
+        email: formData.email,
+        company: formData.company,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
       });
 
-      // Redirect to login
-      navigate("/auth/login");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Registration Failed",
-        description: "Something went wrong. Please try again.",
-      });
+      if (response.success) {
+        toast({
+          title: "Account Created Successfully!",
+          description:
+            response.message ||
+            "Welcome to ChatWidget Pro. You can now sign in to your account.",
+          className: "bg-green-50 border-green-200 text-green-800",
+        });
+
+        // Redirect to login
+        navigate("/auth/login");
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      if (isNetworkError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Connection Error",
+          description:
+            "Unable to connect to the server. Please check your internet connection and try again.",
+        });
+      } else if (error.errors) {
+        // Handle validation errors from API
+        const apiErrors = formatApiErrors(error.errors);
+        setErrors((prev) => ({ ...prev, ...apiErrors }));
+
+        toast({
+          variant: "destructive",
+          title: "Registration Failed",
+          description: error.message || "Please check the form and try again.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Registration Failed",
+          description: getErrorMessage(error),
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -120,8 +184,21 @@ const Register = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+    // Special handling for confirm password when password changes
+    if (
+      field === "password" &&
+      errors.confirmPassword &&
+      formData.confirmPassword
+    ) {
+      const confirmError = validateField(
+        "confirmPassword",
+        formData.confirmPassword,
+      );
+      setErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
     }
   };
 
@@ -226,66 +303,44 @@ const Register = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-sm font-medium">
-                      First Name
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="firstName"
-                        type="text"
-                        placeholder="John"
-                        value={formData.firstName}
-                        onChange={(e) =>
-                          handleInputChange("firstName", e.target.value)
-                        }
-                        className={cn(
-                          "pl-10 h-12",
-                          errors.firstName &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.firstName && (
-                      <p className="text-sm text-red-600 flex items-center space-x-1">
-                        <span>⚠️</span>
-                        <span>{errors.firstName}</span>
-                      </p>
-                    )}
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-sm font-medium">
+                    Full Name
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="John Doe"
+                      value={formData.fullName}
+                      onChange={(e) =>
+                        handleInputChange("fullName", e.target.value)
+                      }
+                      onBlur={(e) =>
+                        handleFieldBlur("fullName", e.target.value)
+                      }
+                      className={cn(
+                        "pl-10 h-12",
+                        errors.fullName &&
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
+                      )}
+                      aria-describedby={
+                        errors.fullName ? "fullName-error" : undefined
+                      }
+                      aria-invalid={!!errors.fullName}
+                      disabled={isLoading}
+                    />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-sm font-medium">
-                      Last Name
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="lastName"
-                        type="text"
-                        placeholder="Doe"
-                        value={formData.lastName}
-                        onChange={(e) =>
-                          handleInputChange("lastName", e.target.value)
-                        }
-                        className={cn(
-                          "pl-10 h-12",
-                          errors.lastName &&
-                            "border-red-500 focus-visible:ring-red-500",
-                        )}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.lastName && (
-                      <p className="text-sm text-red-600 flex items-center space-x-1">
-                        <span>⚠️</span>
-                        <span>{errors.lastName}</span>
-                      </p>
-                    )}
-                  </div>
+                  {errors.fullName && (
+                    <p
+                      id="fullName-error"
+                      className="text-sm text-red-600 flex items-center space-x-1"
+                    >
+                      <span>⚠️</span>
+                      <span>{errors.fullName}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -302,16 +357,24 @@ const Register = () => {
                       onChange={(e) =>
                         handleInputChange("email", e.target.value)
                       }
+                      onBlur={(e) => handleFieldBlur("email", e.target.value)}
                       className={cn(
                         "pl-10 h-12",
                         errors.email &&
-                          "border-red-500 focus-visible:ring-red-500",
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
                       )}
+                      aria-describedby={
+                        errors.email ? "email-error" : undefined
+                      }
+                      aria-invalid={!!errors.email}
                       disabled={isLoading}
                     />
                   </div>
                   {errors.email && (
-                    <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <p
+                      id="email-error"
+                      className="text-sm text-red-600 flex items-center space-x-1"
+                    >
                       <span>⚠️</span>
                       <span>{errors.email}</span>
                     </p>
@@ -352,16 +415,26 @@ const Register = () => {
                       onChange={(e) =>
                         handleInputChange("password", e.target.value)
                       }
+                      onBlur={(e) =>
+                        handleFieldBlur("password", e.target.value)
+                      }
                       className={cn(
                         "pl-10 h-12",
                         errors.password &&
-                          "border-red-500 focus-visible:ring-red-500",
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
                       )}
+                      aria-describedby={
+                        errors.password ? "password-error" : undefined
+                      }
+                      aria-invalid={!!errors.password}
                       disabled={isLoading}
                     />
                   </div>
                   {errors.password && (
-                    <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <p
+                      id="password-error"
+                      className="text-sm text-red-600 flex items-center space-x-1"
+                    >
                       <span>⚠️</span>
                       <span>{errors.password}</span>
                     </p>
@@ -384,16 +457,28 @@ const Register = () => {
                       onChange={(e) =>
                         handleInputChange("confirmPassword", e.target.value)
                       }
+                      onBlur={(e) =>
+                        handleFieldBlur("confirmPassword", e.target.value)
+                      }
                       className={cn(
                         "pl-10 h-12",
                         errors.confirmPassword &&
-                          "border-red-500 focus-visible:ring-red-500",
+                          "border-red-500 focus-visible:ring-red-500 bg-red-50 dark:bg-red-950/20",
                       )}
+                      aria-describedby={
+                        errors.confirmPassword
+                          ? "confirmPassword-error"
+                          : undefined
+                      }
+                      aria-invalid={!!errors.confirmPassword}
                       disabled={isLoading}
                     />
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <p
+                      id="confirmPassword-error"
+                      className="text-sm text-red-600 flex items-center space-x-1"
+                    >
                       <span>⚠️</span>
                       <span>{errors.confirmPassword}</span>
                     </p>

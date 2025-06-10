@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useRoutes } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { SetupWizard } from "@/components/onboarding/SetupWizard";
 import Index from "./pages/Index";
 import WidgetPage from "./pages/dashboard/WidgetPage";
@@ -75,13 +76,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="chatwidget-theme">
       <AccessibilityProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
       </AccessibilityProvider>
     </ThemeProvider>
   </QueryClientProvider>
