@@ -16,6 +16,10 @@ import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
 import MediaPage from "./pages/dashboard/MediaPage";
 import TestPage from "./pages/TestPage";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import routes from "tempo-routes";
 
 const queryClient = new QueryClient();
@@ -57,6 +61,10 @@ const AppRoutes = () => {
         <Route path="/dashboard/embed" element={<EmbedPage />} />
         <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
         <Route path="/dashboard/media" element={<MediaPage />} />
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

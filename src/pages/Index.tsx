@@ -57,6 +57,7 @@ import {
   Keyboard,
   Calendar,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -272,12 +273,20 @@ const Index = () => {
                 Setup Wizard
               </Button>
               <Button
-                onClick={() => navigate("/dashboard/widget")}
+                variant="ghost"
+                onClick={() => navigate("/auth/login")}
+                className="group"
+              >
+                Sign In
+              </Button>
+              <Button
+                onClick={() => navigate("/auth/register")}
                 className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Get Started
                 <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
               </Button>
+              <ThemeToggle />
 
               {/* Mobile Menu Button */}
               <Button
@@ -319,6 +328,19 @@ const Index = () => {
                   <Sparkles className="h-4 w-4 mr-2" />
                   Setup Wizard
                 </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => navigate("/auth/login")}
+                >
+                  Sign In
+                </Button>
+                <div className="pt-4 border-t border-border/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                </div>
               </div>
             </div>
           )}
