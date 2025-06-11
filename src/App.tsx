@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
@@ -14,6 +13,9 @@ import TestPage from './pages/TestPage';
 import NotFound from './pages/NotFound';
 import { ScraperPage } from './pages/dashboard/ScraperPage';
 import { AccessibilityProvider } from './components/accessibility/AccessibilityProvider';
+import { DatabaseSourcePage } from './pages/dashboard/DatabaseSourcePage';
+import { ApiSourcePage } from './pages/dashboard/ApiSourcePage';
+import { FilesSourcePage } from './pages/dashboard/FilesSourcePage';
 
 function App() {
   return (
@@ -31,6 +33,9 @@ function App() {
           <Route path="/dashboard/media" element={<MediaPage />} />
           <Route path="/dashboard/testing" element={<TestingPage />} />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/dashboard/knowledge/database" element={<DatabaseSourcePage />} />
+          <Route path="/dashboard/knowledge/api" element={<ApiSourcePage />} />
+          <Route path="/dashboard/knowledge/files" element={<FilesSourcePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
