@@ -13,25 +13,28 @@ import TestingPage from './pages/dashboard/TestingPage';
 import TestPage from './pages/TestPage';
 import NotFound from './pages/NotFound';
 import { ScraperPage } from './pages/dashboard/ScraperPage';
+import { AccessibilityProvider } from './components/accessibility/AccessibilityProvider';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard/widget" element={<WidgetPage />} />
-        <Route path="/dashboard/knowledge" element={<KnowledgePage />} />
-        <Route path="/dashboard/scraper" element={<ScraperPage />} />
-        <Route path="/dashboard/providers" element={<ProvidersPage />} />
-        <Route path="/dashboard/models" element={<ModelsPage />} />
-        <Route path="/dashboard/embed" element={<EmbedPage />} />
-        <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
-        <Route path="/dashboard/media" element={<MediaPage />} />
-        <Route path="/dashboard/testing" element={<TestingPage />} />
-        <Route path="/test" element={<TestPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <AccessibilityProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard/widget" element={<WidgetPage />} />
+          <Route path="/dashboard/knowledge" element={<KnowledgePage />} />
+          <Route path="/dashboard/scraper" element={<ScraperPage />} />
+          <Route path="/dashboard/providers" element={<ProvidersPage />} />
+          <Route path="/dashboard/models" element={<ModelsPage />} />
+          <Route path="/dashboard/embed" element={<EmbedPage />} />
+          <Route path="/dashboard/analytics" element={<AnalyticsPage />} />
+          <Route path="/dashboard/media" element={<MediaPage />} />
+          <Route path="/dashboard/testing" element={<TestingPage />} />
+          <Route path="/test" element={<TestPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </AccessibilityProvider>
   );
 }
 
