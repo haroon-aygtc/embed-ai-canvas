@@ -10,6 +10,8 @@ import {
     FileText, Globe, Code, Database, Layers, TrendingUp
 } from 'lucide-react';
 import { SourceCard } from './SourceCard';
+import { AddSourceDialog } from './AddSourceDialog';
+import { SourceDetailDialog } from './SourceDetailDialog';
 
 interface Source {
     id: string;
@@ -29,9 +31,11 @@ interface Source {
 export const SourcesList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+    const [showDetailDialog, setShowDetailDialog] = useState(false);
 
-    // Mock data for sources
-    const mockSources: Source[] = [
+    // Mock data for sources - now as state so we can add to it
+    const [sources, setSources] = useState<Source[]>([
         {
             id: 'src-1',
             name: 'Product Manual v2.1.pdf',
@@ -106,10 +110,10 @@ export const SourcesList = () => {
             queries: 890,
             lastSync: '4 hours ago'
         }
-    ];
+    ]);
 
     // Filter sources based on search and filter
-    const filteredSources = mockSources.filter(source => {
+    const filteredSources = sources.filter(source => {
         const matchesSearch = source.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             source.knowledgeBaseName.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -124,46 +128,105 @@ export const SourcesList = () => {
 
     // Calculate statistics
     const stats = {
-        total: mockSources.length,
-        active: mockSources.filter(s => s.status === 'active').length,
-        processing: mockSources.filter(s => s.status === 'processing').length,
-        errors: mockSources.filter(s => s.status === 'error').length
+        total: sources.length,
+        active: sources.filter(s => s.status === 'active').length,
+        processing: sources.filter(s => s.status === 'processing').length,
+        errors: sources.filter(s => s.status === 'error').length
     };
 
     // Handler functions
     const handleViewSource = (sourceId: string) => {
-        console.log('View source:', sourceId);
-        // Implement view source details
+        const source = sources.find(s => s.id === sourceId);
+        if (source) {
+            setSelectedSource(source);
+            setShowDetailDialog(true);
+        }
     };
 
     const handleEditSource = (sourceId: string) => {
         console.log('Edit source:', sourceId);
-        // Implement edit source
+        // TODO: Implement edit source dialog
     };
 
     const handleSyncSource = (sourceId: string) => {
         console.log('Sync source:', sourceId);
-        // Implement sync source
+        // Simulate sync action
+        setSources(prev => prev.map(source => 
+            source.id === sourceId 
+                ? { ...source, status: 'processing' as const, processingProgress: 0 }
+                : source
+        ));
+        
+        // Simulate progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            setSources(prev => prev.map(source => 
+                source.id === sourceId 
+                    ? { ...source, processingProgress: progress }
+                    : source
+            ));
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                setSources(prev => prev.map(source => 
+                    source.id === sourceId 
+                        ? { 
+                            ...source, 
+                            status: 'active' as const, 
+                            processingProgress: undefined,
+                            lastSync: 'Just now'
+                        }
+                        : source
+                ));
+            }
+        }, 500);
     };
 
     const handleSourceSettings = (sourceId: string) => {
         console.log('Source settings:', sourceId);
-        // Implement source settings
+        // TODO: Implement source settings dialog
     };
 
     const handleMoreActions = (sourceId: string) => {
         console.log('More actions for source:', sourceId);
-        // Implement more actions menu
+        // TODO: Implement more actions menu
     };
 
     const handleSyncAll = () => {
         console.log('Sync all sources');
-        // Implement sync all sources
+        // Simulate syncing all active sources
+        sources.forEach(source => {
+            if (source.status === 'active') {
+                handleSyncSource(source.id);
+            }
+        });
     };
 
     const handleExport = () => {
         console.log('Export sources data');
-        // Implement export functionality
+        // TODO: Implement export functionality
+    };
+
+    const handleSourceAdd = (newSource: Source) => {
+        setSources(prev => [...prev, newSource]);
+        
+        // Simulate processing completion after 3 seconds
+        setTimeout(() => {
+            setSources(prev => prev.map(source => 
+                source.id === newSource.id 
+                    ? { 
+                        ...source, 
+                        status: 'active' as const, 
+                        size: '1.2 MB',
+                        itemCount: 42,
+                        accuracy: 92,
+                        lastSync: 'Just now',
+                        processingProgress: undefined
+                    }
+                    : source
+            ));
+        }, 3000);
     };
 
     return (
@@ -212,10 +275,7 @@ export const SourcesList = () => {
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Sync All
                             </Button>
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Source
-                            </Button>
+                            <AddSourceDialog onSourceAdd={handleSourceAdd} />
                         </div>
                     </div>
                 </CardContent>
@@ -328,15 +388,31 @@ export const SourcesList = () => {
                                         : 'No sources have been created yet'
                                     }
                                 </p>
-                                <Button>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Add New Source
-                                </Button>
+                                <AddSourceDialog 
+                                    trigger={
+                                        <Button>
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Add New Source
+                                        </Button>
+                                    }
+                                    onSourceAdd={handleSourceAdd}
+                                />
                             </div>
                         )}
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Source Detail Dialog */}
+            <SourceDetailDialog
+                source={selectedSource}
+                open={showDetailDialog}
+                onOpenChange={setShowDetailDialog}
+                onEdit={handleEditSource}
+                onSync={handleSyncSource}
+                onSettings={handleSourceSettings}
+                onMoreActions={handleMoreActions}
+            />
         </div>
     );
 };
