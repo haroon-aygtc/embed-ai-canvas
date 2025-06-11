@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Settings3DIcon, Bot3DIcon, Database3DIcon, Code3DIcon, Analytics3DIcon, Image3DIcon, Knowledge3DIcon } from '@/components/ui/Icon3D';
+import { Globe } from 'lucide-react';
 
 const navigationItems = [
   {
@@ -17,6 +19,13 @@ const navigationItems = [
     icon: Knowledge3DIcon,
     href: '/dashboard/knowledge',
     description: 'Manage knowledge sources and content'
+  },
+  {
+    title: 'Web Scraper',
+    icon: Globe,
+    href: '/dashboard/scraper',
+    description: 'Extract content from websites',
+    badge: 'Pro'
   },
   {
     title: 'AI Providers',
