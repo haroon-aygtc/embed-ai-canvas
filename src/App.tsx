@@ -1,17 +1,17 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Index } from './pages/Index';
-import { WidgetPage } from './pages/dashboard/WidgetPage';
-import { KnowledgePage } from './pages/dashboard/KnowledgePage';
-import { ProvidersPage } from './pages/dashboard/ProvidersPage';
-import { ModelsPage } from './pages/dashboard/ModelsPage';
-import { EmbedPage } from './pages/dashboard/EmbedPage';
-import { AnalyticsPage } from './pages/dashboard/AnalyticsPage';
-import { MediaPage } from './pages/dashboard/MediaPage';
-import { TestingPage } from './pages/TestingPage';
-import { TestPage } from './pages/TestPage';
-import { NotFound } from './pages/NotFound';
-
+import Index from './pages/Index';
+import WidgetPage from './pages/dashboard/WidgetPage';
+import KnowledgePage from './pages/dashboard/KnowledgePage';
+import ProvidersPage from './pages/dashboard/ProvidersPage';
+import ModelsPage from './pages/dashboard/ModelsPage';
+import EmbedPage from './pages/dashboard/EmbedPage';
+import AnalyticsPage from './pages/dashboard/AnalyticsPage';
+import MediaPage from './pages/dashboard/MediaPage';
+import TestingPage from './pages/dashboard/TestingPage';
+import TestPage from './pages/TestPage';
+import NotFound from './pages/NotFound';
 import { ScraperPage } from './pages/dashboard/ScraperPage';
 
 function App() {
