@@ -1,142 +1,125 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Search, Download, Eye, MoreHorizontal, Calendar, Globe,
-  CheckCircle, AlertCircle, Clock, Filter
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Globe, Calendar, FileText, Eye, Download, MoreHorizontal,
+  CheckCircle, AlertCircle, Clock
 } from 'lucide-react';
 
 export const ScraperHistory = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Mock scraping history data
   const scrapingHistory = [
     {
       id: '1',
-      url: 'https://example.com',
+      url: 'https://docs.example.com',
       status: 'completed',
-      pages: 25,
-      contentType: 'All Content',
-      timestamp: '2024-06-11 14:30',
+      pagesScraped: 45,
+      startTime: '2024-01-15 10:30',
+      duration: '2m 34s',
       size: '2.4 MB'
     },
     {
       id: '2',
-      url: 'https://docs.example.com',
+      url: 'https://blog.example.com',
       status: 'completed',
-      pages: 156,
-      contentType: 'Text Only',
-      timestamp: '2024-06-11 12:15',
+      pagesScraped: 23,
+      startTime: '2024-01-14 15:20',
+      duration: '1m 12s',
       size: '1.8 MB'
     },
     {
       id: '3',
-      url: 'https://blog.example.com',
-      status: 'failed',
-      pages: 0,
-      contentType: 'All Content',
-      timestamp: '2024-06-11 10:45',
-      size: '0 MB'
+      url: 'https://help.example.com',
+      status: 'running',
+      pagesScraped: 12,
+      startTime: '2024-01-15 11:45',
+      duration: '45s',
+      size: '0.9 MB'
     },
     {
       id: '4',
       url: 'https://api.example.com',
-      status: 'processing',
-      pages: 12,
-      contentType: 'Structured Data',
-      timestamp: '2024-06-11 15:20',
-      size: '890 KB'
+      status: 'error',
+      pagesScraped: 0,
+      startTime: '2024-01-13 09:15',
+      duration: '5s',
+      size: '0 MB'
     }
   ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return CheckCircle;
-      case 'failed': return AlertCircle;
-      case 'processing': return Clock;
-      default: return Clock;
+      case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'running': return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'error': return <AlertCircle className="h-4 w-4 text-red-600" />;
+      default: return <Clock className="h-4 w-4" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'completed': return <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>;
+      case 'running': return <Badge variant="default">Running</Badge>;
+      case 'error': return <Badge variant="destructive">Error</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
     }
   };
-
-  const filteredHistory = scrapingHistory.filter(item =>
-    item.url.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search scraping history..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" size="sm">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </div>
-
-      {/* History List */}
       <Card>
         <CardHeader>
-          <CardTitle>Scraping History</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Scraping History
+          </CardTitle>
           <CardDescription>
-            View and manage your previous scraping sessions
+            View and manage your website scraping sessions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredHistory.map((item) => {
-              const StatusIcon = getStatusIcon(item.status);
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Globe className="h-5 w-5 text-primary" />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Website</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Pages</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scrapingHistory.map((session) => (
+                <TableRow key={session.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span className="truncate max-w-xs">{session.url}</span>
                     </div>
-                    <div>
-                      <div className="font-medium">{item.url}</div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <span>{item.pages} pages</span>
-                        <span>•</span>
-                        <span>{item.contentType}</span>
-                        <span>•</span>
-                        <span>{item.size}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {item.timestamp}
-                        </span>
-                      </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(session.status)}
+                      {getStatusBadge(session.status)}
                     </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Badge className={getStatusColor(item.status)}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {item.status}
-                    </Badge>
-                    <div className="flex space-x-1">
+                  </TableCell>
+                  <TableCell>{session.pagesScraped}</TableCell>
+                  <TableCell>{session.startTime}</TableCell>
+                  <TableCell>{session.duration}</TableCell>
+                  <TableCell>{session.size}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -147,11 +130,11 @@ export const ScraperHistory = () => {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

@@ -5,252 +5,196 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
-import { Settings, Save, RefreshCw, Shield, Zap, Clock } from 'lucide-react';
+import { Settings, Save, RotateCcw } from 'lucide-react';
 
 export const ScraperSettings = () => {
-  const { toast } = useToast();
   const [settings, setSettings] = useState({
-    defaultDelay: '1',
-    maxConcurrent: '3',
-    timeout: '30',
-    userAgent: 'ChatWidget Pro Scraper 1.0',
     respectRobots: true,
     followRedirects: true,
     extractImages: false,
-    extractCode: true,
-    autoSave: true,
-    notifications: true
+    extractLinks: true,
+    crawlDelay: '1000',
+    userAgent: 'ChatWidget Scraper 1.0',
+    excludePatterns: '',
+    includePatterns: '',
+    maxPages: '100',
+    timeout: '30'
   });
 
+  const updateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
   const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Your scraper settings have been updated successfully",
-    });
+    console.log('Saving settings:', settings);
+    // TODO: Implement settings save
   };
 
   const handleReset = () => {
     setSettings({
-      defaultDelay: '1',
-      maxConcurrent: '3',
-      timeout: '30',
-      userAgent: 'ChatWidget Pro Scraper 1.0',
       respectRobots: true,
       followRedirects: true,
       extractImages: false,
-      extractCode: true,
-      autoSave: true,
-      notifications: true
-    });
-    toast({
-      title: "Settings Reset",
-      description: "All settings have been restored to default values",
+      extractLinks: true,
+      crawlDelay: '1000',
+      userAgent: 'ChatWidget Scraper 1.0',
+      excludePatterns: '',
+      includePatterns: '',
+      maxPages: '100',
+      timeout: '30'
     });
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Performance Settings
-            </CardTitle>
-            <CardDescription>
-              Configure scraping performance and resource usage
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="defaultDelay">Default Delay (seconds)</Label>
-              <Input
-                id="defaultDelay"
-                type="number"
-                min="0"
-                max="10"
-                step="0.5"
-                value={settings.defaultDelay}
-                onChange={(e) => setSettings(prev => ({ ...prev, defaultDelay: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxConcurrent">Max Concurrent Requests</Label>
-              <Select
-                value={settings.maxConcurrent}
-                onValueChange={(value) => setSettings(prev => ({ ...prev, maxConcurrent: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 (Slow)</SelectItem>
-                  <SelectItem value="3">3 (Balanced)</SelectItem>
-                  <SelectItem value="5">5 (Fast)</SelectItem>
-                  <SelectItem value="10">10 (Very Fast)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timeout">Request Timeout (seconds)</Label>
-              <Input
-                id="timeout"
-                type="number"
-                min="5"
-                max="120"
-                value={settings.timeout}
-                onChange={(e) => setSettings(prev => ({ ...prev, timeout: e.target.value }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security & Compliance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Security & Compliance
-            </CardTitle>
-            <CardDescription>
-              Configure security and compliance settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userAgent">User Agent</Label>
-              <Input
-                id="userAgent"
-                value={settings.userAgent}
-                onChange={(e) => setSettings(prev => ({ ...prev, userAgent: e.target.value }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Scraper Settings
+          </CardTitle>
+          <CardDescription>
+            Configure scraping behavior and limits
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Behavior Settings */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Scraping Behavior</h4>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
                 <Label>Respect robots.txt</Label>
-                <div className="text-sm text-muted-foreground">
-                  Follow website crawling guidelines
-                </div>
+                <p className="text-sm text-muted-foreground">Follow website crawling rules</p>
               </div>
               <Switch
                 checked={settings.respectRobots}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, respectRobots: checked }))}
+                onCheckedChange={(checked) => updateSetting('respectRobots', checked)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Follow Redirects</Label>
-                <div className="text-sm text-muted-foreground">
-                  Automatically follow HTTP redirects
-                </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <Label>Follow redirects</Label>
+                <p className="text-sm text-muted-foreground">Automatically follow HTTP redirects</p>
               </div>
               <Switch
                 checked={settings.followRedirects}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, followRedirects: checked }))}
+                onCheckedChange={(checked) => updateSetting('followRedirects', checked)}
               />
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Content Extraction */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Content Extraction
-            </CardTitle>
-            <CardDescription>
-              Configure what content to extract by default
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Extract Images</Label>
-                <div className="text-sm text-muted-foreground">
-                  Download and save image files
-                </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <Label>Extract images</Label>
+                <p className="text-sm text-muted-foreground">Download and include images</p>
               </div>
               <Switch
                 checked={settings.extractImages}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, extractImages: checked }))}
+                onCheckedChange={(checked) => updateSetting('extractImages', checked)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Extract Code Blocks</Label>
-                <div className="text-sm text-muted-foreground">
-                  Preserve code formatting and syntax
-                </div>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <Label>Extract links</Label>
+                <p className="text-sm text-muted-foreground">Include outbound and internal links</p>
               </div>
               <Switch
-                checked={settings.extractCode}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, extractCode: checked }))}
+                checked={settings.extractLinks}
+                onCheckedChange={(checked) => updateSetting('extractLinks', checked)}
               />
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Auto-save Results</Label>
-                <div className="text-sm text-muted-foreground">
-                  Automatically save to knowledge base
-                </div>
+          {/* Performance Settings */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Performance Settings</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="crawlDelay">Crawl delay (ms)</Label>
+                <Input
+                  id="crawlDelay"
+                  type="number"
+                  value={settings.crawlDelay}
+                  onChange={(e) => updateSetting('crawlDelay', e.target.value)}
+                />
               </div>
-              <Switch
-                checked={settings.autoSave}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoSave: checked }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Configure scraping notifications and alerts
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Enable Notifications</Label>
-                <div className="text-sm text-muted-foreground">
-                  Get notified when scraping completes
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxPages">Max pages</Label>
+                <Input
+                  id="maxPages"
+                  type="number"
+                  value={settings.maxPages}
+                  onChange={(e) => updateSetting('maxPages', e.target.value)}
+                />
               </div>
-              <Switch
-                checked={settings.notifications}
-                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, notifications: checked }))}
+
+              <div className="space-y-2">
+                <Label htmlFor="timeout">Timeout (seconds)</Label>
+                <Input
+                  id="timeout"
+                  type="number"
+                  value={settings.timeout}
+                  onChange={(e) => updateSetting('timeout', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="userAgent">User Agent</Label>
+                <Input
+                  id="userAgent"
+                  value={settings.userAgent}
+                  onChange={(e) => updateSetting('userAgent', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Pattern Settings */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">URL Patterns</h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="includePatterns">Include patterns (one per line)</Label>
+              <Textarea
+                id="includePatterns"
+                placeholder="/docs/*&#10;/help/*&#10;/api/*"
+                value={settings.includePatterns}
+                onChange={(e) => updateSetting('includePatterns', e.target.value)}
+                rows={3}
               />
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-3">
-        <Button variant="outline" onClick={handleReset}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Reset to Defaults
-        </Button>
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
-          Save Settings
-        </Button>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="excludePatterns">Exclude patterns (one per line)</Label>
+              <Textarea
+                id="excludePatterns"
+                placeholder="/admin/*&#10;/private/*&#10;*.pdf"
+                value={settings.excludePatterns}
+                onChange={(e) => updateSetting('excludePatterns', e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2 pt-4">
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </Button>
+            <Button variant="outline" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset to Defaults
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
