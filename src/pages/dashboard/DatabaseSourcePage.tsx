@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -93,7 +92,6 @@ export const DatabaseSourcePage = () => {
         <PageHeader
           title="Database Source"
           description="Connect your database as a knowledge source"
-          icon={Database}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
