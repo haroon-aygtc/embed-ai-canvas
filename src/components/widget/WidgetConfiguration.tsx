@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Code2, Eye, Sparkles } from 'lucide-react';
-import { WidgetPreview } from './WidgetPreview';
-import { WidgetTemplates } from './WidgetTemplates';
-import { ConfigurationTabs } from './ConfigurationTabs';
-import { EmbedCodeGenerator } from '../embed/EmbedCodeGenerator';
-import { PageHeader } from '@/components/layout/PageHeader';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Palette, Code2, Eye, Sparkles } from "lucide-react";
+import { WidgetPreview } from "./WidgetPreview";
+import { WidgetTemplates } from "./WidgetTemplates";
+import { ConfigurationTabs } from "./ConfigurationTabs";
+import { EmbedCodeGenerator } from "../embed/EmbedCodeGenerator";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export interface WidgetConfig {
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
   primaryColor: string;
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  size: 'small' | 'medium' | 'large';
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  size: "small" | "medium" | "large";
   welcomeMessage: string;
   placeholder: string;
   title: string;
@@ -26,8 +32,8 @@ export interface WidgetConfig {
     sources: Array<{
       id: string;
       name: string;
-      type: 'docs' | 'faq' | 'tickets' | 'custom';
-      status: 'active' | 'training' | 'inactive';
+      type: "docs" | "faq" | "tickets" | "custom";
+      status: "active" | "training" | "inactive";
     }>;
     settings: {
       autoLearning: boolean;
@@ -39,17 +45,17 @@ export interface WidgetConfig {
 }
 
 const defaultConfig: WidgetConfig = {
-  theme: 'light',
-  primaryColor: '#3b82f6',
-  position: 'bottom-right',
-  size: 'medium',
-  welcomeMessage: 'Hello! How can I help you today?',
-  placeholder: 'Type your message...',
-  title: 'AI Assistant',
-  subtitle: 'Powered by ChatWidget Pro',
+  theme: "light",
+  primaryColor: "#3b82f6",
+  position: "bottom-right",
+  size: "medium",
+  welcomeMessage: "Hello! How can I help you today?",
+  placeholder: "Type your message...",
+  title: "AI Assistant",
+  subtitle: "Powered by ChatWidget Pro",
   enabled: true,
   showBranding: true,
-  selectedModelId: 'gpt-4',
+  selectedModelId: "gpt-4",
   knowledgeBase: {
     selectedKnowledgeBases: [],
     sources: [],
@@ -57,36 +63,34 @@ const defaultConfig: WidgetConfig = {
       autoLearning: true,
       contextAwareness: true,
       realTimeUpdates: false,
-      confidenceThreshold: true
-    }
-  }
+      confidenceThreshold: true,
+    },
+  },
 };
 
 interface WidgetConfigurationProps {
   onSetupWizard?: () => void;
 }
 
-export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps) => {
+export const WidgetConfiguration = ({
+  onSetupWizard,
+}: WidgetConfigurationProps) => {
   const [config, setConfig] = useState<WidgetConfig>(defaultConfig);
-  const [activeTab, setActiveTab] = useState('design');
+  const [activeTab, setActiveTab] = useState("design");
 
   const updateConfig = (updates: Partial<WidgetConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    setConfig((prev) => ({ ...prev, ...updates }));
   };
 
   const handleTemplateSelect = (templateConfig: WidgetConfig) => {
     setConfig(templateConfig);
-    setActiveTab('design'); // Switch to design tab after selecting template
+    setActiveTab("design"); // Switch to design tab after selecting template
   };
 
   const headerActions = (
     <>
-      <Button variant="outline">
-        Save Draft
-      </Button>
-      <Button>
-        Publish Changes
-      </Button>
+      <Button variant="outline">Save Draft</Button>
+      <Button>Publish Changes</Button>
     </>
   );
 
@@ -120,7 +124,7 @@ export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps)
             <CardContent className="p-6">
               <WidgetTemplates
                 onSelectTemplate={handleTemplateSelect}
-                currentConfig={config}
+                currentConfig={widget}
               />
             </CardContent>
           </Card>
@@ -129,7 +133,10 @@ export const WidgetConfiguration = ({ onSetupWizard }: WidgetConfigurationProps)
         <TabsContent value="design" className="mt-6">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <ConfigurationTabs config={config} onConfigChange={updateConfig} />
+              <ConfigurationTabs
+                config={config}
+                onConfigChange={updateConfig}
+              />
             </div>
 
             <div className="xl:sticky xl:top-6">

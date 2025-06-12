@@ -1,9 +1,15 @@
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { WidgetConfig } from './WidgetConfiguration';
-import { HelpTooltip } from '@/components/ui/HelpSystem';
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { WidgetConfig } from "./WidgetConfiguration";
+import { HelpTooltip } from "@/components/ui/HelpSystem";
 
 interface AppearanceConfigProps {
   config: WidgetConfig;
@@ -11,30 +17,60 @@ interface AppearanceConfigProps {
 }
 
 const colorPresets = [
-  { name: 'Professional Blue', value: '#3b82f6', description: 'Trustworthy and professional' },
-  { name: 'Success Green', value: '#10b981', description: 'Growth and success focused' },
-  { name: 'Creative Purple', value: '#8b5cf6', description: 'Creative and innovative' },
-  { name: 'Energetic Orange', value: '#f59e0b', description: 'Energetic and friendly' },
-  { name: 'Bold Red', value: '#ef4444', description: 'Urgent and attention-grabbing' },
-  { name: 'Elegant Pink', value: '#ec4899', description: 'Modern and approachable' },
+  {
+    name: "Professional Blue",
+    value: "#3b82f6",
+    description: "Trustworthy and professional",
+  },
+  {
+    name: "Success Green",
+    value: "#10b981",
+    description: "Growth and success focused",
+  },
+  {
+    name: "Creative Purple",
+    value: "#8b5cf6",
+    description: "Creative and innovative",
+  },
+  {
+    name: "Energetic Orange",
+    value: "#f59e0b",
+    description: "Energetic and friendly",
+  },
+  {
+    name: "Bold Red",
+    value: "#ef4444",
+    description: "Urgent and attention-grabbing",
+  },
+  {
+    name: "Elegant Pink",
+    value: "#ec4899",
+    description: "Modern and approachable",
+  },
 ];
 
-export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigProps) => {
+export const AppearanceConfig = ({
+  config,
+  onConfigChange,
+}: AppearanceConfigProps) => {
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h3 className="text-lg font-semibold mb-2">Theme & Visual Settings</h3>
-        <p className="text-sm text-muted-foreground">Configure the visual appearance and positioning of your widget</p>
+        <p className="text-sm text-muted-foreground">
+          Configure the visual appearance and positioning of your widget
+        </p>
       </div>
 
       {/* Dual Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
         {/* Left Column - Theme & Layout */}
         <div className="space-y-6">
           <div>
-            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Display Settings</h4>
+            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+              Display Settings
+            </h4>
             <div className="space-y-4">
               <div className="space-y-2">
                 <HelpTooltip
@@ -45,7 +81,7 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                 </HelpTooltip>
                 <Select
                   value={config.theme}
-                  onValueChange={(value: 'light' | 'dark' | 'auto') =>
+                  onValueChange={(value: "light" | "dark" | "auto") =>
                     onConfigChange({ theme: value })
                   }
                 >
@@ -69,7 +105,7 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                 </HelpTooltip>
                 <Select
                   value={config.size}
-                  onValueChange={(value: 'small' | 'medium' | 'large') =>
+                  onValueChange={(value: "small" | "medium" | "large") =>
                     onConfigChange({ size: value })
                   }
                 >
@@ -78,7 +114,9 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="small">📱 Compact (320×380)</SelectItem>
-                    <SelectItem value="medium">💻 Standard (350×450)</SelectItem>
+                    <SelectItem value="medium">
+                      💻 Standard (350×450)
+                    </SelectItem>
                     <SelectItem value="large">🖥️ Spacious (400×520)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -87,7 +125,9 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
           </div>
 
           <div>
-            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Position & Custom Color</h4>
+            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+              Position & Custom Color
+            </h4>
             <div className="space-y-4">
               <div className="space-y-2">
                 <HelpTooltip
@@ -98,15 +138,21 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                 </HelpTooltip>
                 <Select
                   value={config.position}
-                  onValueChange={(value: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left') =>
-                    onConfigChange({ position: value })
-                  }
+                  onValueChange={(
+                    value:
+                      | "bottom-right"
+                      | "bottom-left"
+                      | "top-right"
+                      | "top-left",
+                  ) => onConfigChange({ position: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bottom-right">↘️ Bottom Right</SelectItem>
+                    <SelectItem value="bottom-right">
+                      ↘️ Bottom Right
+                    </SelectItem>
                     <SelectItem value="bottom-left">↙️ Bottom Left</SelectItem>
                     <SelectItem value="top-right">↗️ Top Right</SelectItem>
                     <SelectItem value="top-left">↖️ Top Left</SelectItem>
@@ -126,13 +172,17 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                   <Input
                     type="color"
                     value={config.primaryColor}
-                    onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                    onChange={(e) =>
+                      onConfigChange({ primaryColor: e.target.value })
+                    }
                     className="w-16 h-10 p-1 border rounded cursor-pointer"
                     title="Pick custom color"
                   />
                   <Input
                     value={config.primaryColor}
-                    onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                    onChange={(e) =>
+                      onConfigChange({ primaryColor: e.target.value })
+                    }
                     placeholder="#3b82f6"
                     className="flex-1"
                     title="Enter hex color code"
@@ -146,7 +196,9 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
         {/* Right Column - Brand Colors */}
         <div className="space-y-6">
           <div>
-            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">Brand Color Presets</h4>
+            <h4 className="text-base font-medium mb-4 text-muted-foreground uppercase tracking-wide text-xs">
+              Brand Color Presets
+            </h4>
             <HelpTooltip
               content="Your brand color will be used for buttons, highlights, and the chat bubble. Choose a color that matches your brand identity."
               title="Brand Color Selection"
@@ -159,10 +211,11 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
               {colorPresets.map((preset) => (
                 <button
                   key={preset.value}
-                  className={`p-4 rounded-lg border-2 transition-all hover:scale-[1.02] text-left group ${config.primaryColor === preset.value
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md'
-                    : 'border-border hover:border-blue-300 hover:shadow-sm'
-                    }`}
+                  className={`p-4 rounded-lg border-2 transition-all hover:scale-[1.02] text-left group ${
+                    config.primaryColor === preset.value
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950 shadow-md"
+                      : "border-border hover:border-blue-300 hover:shadow-sm"
+                  }`}
                   onClick={() => onConfigChange({ primaryColor: preset.value })}
                   title={preset.description}
                 >
@@ -172,10 +225,14 @@ export const AppearanceConfig = ({ config, onConfigChange }: AppearanceConfigPro
                       style={{ backgroundColor: preset.value }}
                     />
                     <div className="flex-1">
-                      <span className="font-medium text-sm block">{preset.name}</span>
-                      <p className="text-xs text-muted-foreground">{preset.description}</p>
+                      <span className="font-medium text-sm block">
+                        {preset.name}
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        {preset.description}
+                      </p>
                     </div>
-                    {config.primaryColor === preset.value && (
+                    {config.primary_color === preset.value && (
                       <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
