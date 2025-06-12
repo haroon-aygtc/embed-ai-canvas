@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Api, TestTube, Save, RefreshCw, CheckCircle, AlertCircle,
+  Globe, TestTube, Save, RefreshCw, CheckCircle, AlertCircle,
   Settings, Shield, Clock, Zap
 } from 'lucide-react';
 
@@ -78,7 +79,7 @@ export const ApiSourcePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Api className="h-5 w-5" />
+                  <Globe className="h-5 w-5" />
                   API Connection
                 </CardTitle>
                 <CardDescription>
